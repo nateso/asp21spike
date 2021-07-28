@@ -55,7 +55,14 @@ mmala_update <- function(curr_m, predictor, stepsize) {
   prop_m <- set_coef(curr_m, predictor, prop_coef)
   backward <- mmala_backward(curr_m, prop_m, predictor, stepsize)
   
-  alpha <- logLik(prop_m) - logLik(curr_m) + backward - forward
+  curr_coef <- coef(curr_m,predictor)
+  Tau <- diag(curr_m$tau[[predictor]])
+
+  prop_log_prior <- mvtnorm::dmvnorm(prop_coef, mean = rep(0,nrow(Tau)), sigma = Tau, log = T)
+  curr_log_prior <- mvtnorm::dmvnorm(curr_coef, mean = rep(0,nrow(Tau)), sigma = Tau, log = T)
+  
+  alpha <- (logLik(prop_m) + prop_log_prior - logLik(curr_m) - curr_log_prior +
+              backward - forward)
   thresh <- log(runif(1))
 
   if (thresh <= alpha) {
@@ -81,11 +88,11 @@ score_gamma <- function(m) {
 #### Fisher informations ####
 
 info_beta <- function(m){
-  crossprod(m$x / fitted(m,'scale')) + diag(c(1/m$tau$location))
+  crossprod(m$x / fitted(m,'scale')^2) + diag(c(1/m$tau$location))
 }
 
 info_gamma <- function(m) {
-  2 * crossprod(m$z) + 1/m$tau$scale
+  2 * crossprod(m$z) + diag(c(1/m$tau$scale))
 }
 
 
