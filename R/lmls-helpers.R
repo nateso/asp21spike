@@ -15,7 +15,7 @@ score_gamma <- function(m) {
 #' @importFrom stats fitted
 
 info_beta <- function(m) {
-  crossprod(m$x / fitted(m, "scale")^2, m$x)
+  crossprod(m$x / fitted(m, "scale"))
 }
 
 info_gamma <- function(m) {
@@ -25,14 +25,14 @@ info_gamma <- function(m) {
 # mcmc helpers ----------------------------------------------------------------
 
 set_beta <- function(m, beta) {
-  m$coefficients$location <- beta
+  m$coefficients$location[] <- beta
   m$fitted.values$location <- drop(m$x %*% beta)
-  m$residuals <- m$y - m$fitted.values$location
+  m$residuals <- m$y - fitted(m, "location")
   m
 }
 
 set_gamma <- function(m, gamma) {
-  m$coefficients$scale <- gamma
+  m$coefficients$scale[] <- gamma
   m$fitted.values$scale <- exp(drop(m$z %*% gamma))
   m
 }
@@ -42,7 +42,7 @@ set_coef_funs <- list(
   scale = set_gamma
 )
 
-set_coef <- function(m, coef, predictor) {
+set_coef <- function(m, predictor, coef) {
   set_coef_funs[[predictor]](m, coef)
 }
 
@@ -84,7 +84,13 @@ dmvnorm <- function(x, mu = 0, chol_sig_inv, log = FALSE) {
   std_norm <- drop(chol_sig_inv %*% (x - mu))
   correction <- sum(log(diag(chol_sig_inv)))
 
-  log_prob <- sum(dnorm(std_norm, log = TRUE)) + correction
+  log_prob <- dnorm(std_norm, log = TRUE)
+
+  if (is.matrix(log_prob)) {
+    log_prob <- colSums(log_prob) + correction
+  } else {
+    log_prob <- sum(log_prob) + correction
+  }
 
   if (log) {
     log_prob
@@ -107,7 +113,7 @@ coefmat <- function(m, predictor) {
 
 #' @importFrom stats quantile
 
-coefmat_samples <- function(m, type, predictor) {
+coefmat_samples <- function(m, predictor, type) {
   samples <- m[[type]][[predictor]]
 
   coefmat <- apply(samples, 2, function(x) {
