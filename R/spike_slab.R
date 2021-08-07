@@ -59,8 +59,8 @@ spike_slab <- function(m,
         current_delta <- delta[[kk]][mm, ]
         current_delta[is.na(current_delta)] <- delta[[kk]][mm-1, is.na(current_delta)]
         theta[[kk]][mm, ll] <- update_theta(hyper$a_theta[kk], 
-                                           hyper$b_theta[kk], 
-                                           current_delta)
+                                            hyper$b_theta[kk], 
+                                            current_delta)
         # this makes sure that we always include the intercept in the model
         # the intercept is always assigned to the slab. However, this does not 
         # imply a flat prior --> need to incorporate.
@@ -71,17 +71,17 @@ spike_slab <- function(m,
         
         ## update delta_lk
         delta[[kk]][mm, ll] <- update_delta(theta = theta[[kk]][mm, ll], 
-                                           tau_j = tau[[kk]][mm-1, ll], 
-                                           a_tau = hyper$a_tau[kk], 
-                                           b_tau = hyper$b_tau[kk], 
-                                           v_0 = v_0)
+                                            tau_j = tau[[kk]][mm-1, ll], 
+                                            a_tau = hyper$a_tau[kk], 
+                                            b_tau = hyper$b_tau[kk], 
+                                            v_0 = v_0)
         
         ## update tau_lk
         tau[[kk]][mm, ll] <- update_tau(a_tau = hyper$a_tau[kk], 
-                                       b_tau = hyper$b_tau[kk], 
-                                       v_0 = v_0, 
-                                       beta_j = coefs[[kk]][mm-1, ll], 
-                                       delta_j = delta[[kk]][mm, ll])
+                                        b_tau = hyper$b_tau[kk], 
+                                        v_0 = v_0, 
+                                        beta_j = coefs[[kk]][mm-1, ll], 
+                                        delta_j = delta[[kk]][mm, ll])
       }
       
       ## update taus in the model
