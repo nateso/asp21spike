@@ -55,6 +55,7 @@ spike_slab <- function(m,
   }
   
   # update parameters
+  pb <- txtProgressBar(0, M, style = 3)
   for (mm in 2:M) {
     for (kk in 1:2) {
       n_params <- ncol(coefs[[kk]])
@@ -104,7 +105,9 @@ spike_slab <- function(m,
                               stepsize = stepsize)
       coefs[[kk]][mm, ] <- coef(m)[[param]]
     }
+    setTxtProgressBar(pb, mm)
   }
+  close(pb)
   
   # delete tau
   m$tau <- NULL
