@@ -96,6 +96,7 @@ info_gamma_spike<- function(m) {
 }
 
 # wrappers ------------------------------------------------------
+
 score_funs_spike <- list(
   location = score_beta_spike,
   scale = score_gamma_spike
@@ -113,12 +114,3 @@ chol_info_funs_spike <- list(
 chol_info_spike <- function(m, predictor) {
   chol_info_funs_spike[[predictor]](m)
 }
-
-
-
-
-
-
-
-
-
