@@ -76,13 +76,13 @@ mmala_update_spike <- function(curr_m, predictor, stepsize) {
 #' @importFrom stats fitted resid
 
 score_beta_spike <- function(m) {
-  drop((resid(m) / fitted(m, "scale")^2) %*% m$x) - coef(m,'location')/m$tau$location)
+  drop((resid(m) / fitted(m, "scale")^2) %*% m$x - coef(m,'location')/m$tau$location)
 }
 
 #' @importFrom stats resid
 
 score_gamma_spike <- function(m) {
-  drop((resid(m, "pearson")^2 - 1) %*% m$z) - coef(m,'scale')/m$tau$scale)
+  drop((resid(m, "pearson")^2 - 1) %*% m$z - coef(m,'scale')/m$tau$scale)
 }
 
 #' @importFrom stats fitted
