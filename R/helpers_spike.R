@@ -30,7 +30,7 @@ update_delta <- function(theta, tau, a_tau, b_tau, v_0) {
   n <- length(tau)
   
   num <- theta * dinvgamma(tau, a_tau, b_tau) 
-  denum <- theta * num + (1 - theta) * dinvgamma(tau, a_tau, b_tau * v_0)
+  denum <-  num + (1 - theta) * dinvgamma(tau, a_tau, b_tau * v_0)
   theta_new <- num / denum
   
   delta <- rbinom(n, 1, theta_new)
