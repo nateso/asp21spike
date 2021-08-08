@@ -3,6 +3,8 @@
 #' @param x Object of class 'lmls_spike'
 #' @param ... Currently not used
 #' 
+#' @method print lmls_spike
+#' 
 #' @export
 print.lmls_spike <- function(x, ...) {
   probs_loc <- colMeans(x$spike$delta$location)

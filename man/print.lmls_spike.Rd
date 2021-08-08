@@ -4,10 +4,12 @@
 \alias{print.lmls_spike}
 \title{Print method for class 'lmls_spike'}
 \usage{
-\method{print}{lmls_spike}(m)
+\method{print}{lmls_spike}(x, ...)
 }
 \arguments{
-\item{m}{Object of class 'lmls_spike'}
+\item{x}{Object of class 'lmls_spike'}
+
+\item{...}{Currently not used}
 }
 \description{
 Print method for class 'lmls_spike'
