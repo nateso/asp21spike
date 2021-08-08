@@ -3,7 +3,7 @@
 set.seed(1509)
 n <- 100
 
-mu <- c(-4,2,0,2,4)
+mu <- rep(1,5)
 sigma <- rep(1,length(mu))
 
 X <- matrix(NA,nrow = n, ncol = length(mu))
@@ -15,7 +15,7 @@ bets <- matrix(c(-2,6,3,0,0))
 gams <- matrix(c(0,0,5,1,-1))
 
 y <- rnorm(n, X %*% bets, exp(-3 + X %*% gams))
-y <- rnorm(n,0,4)
+#y <- y + rnorm(n,0,2)
 
 test_data <- cbind.data.frame(y,X)
 names(test_data) <- c("y",paste0("x",1:5))
@@ -26,7 +26,7 @@ m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
           light = FALSE,maxit = 1000)
 
 # test spike_slab -------------------------------------------
-spsl <- spike_slab(m,v_0 = 0.000001)
+spsl <- spike_slab(m,v_0 = 0.005)
 barplot(colMeans(spsl$spike$delta$location))
 
 
