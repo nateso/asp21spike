@@ -3,6 +3,7 @@
 #' @param a_theta_loc,b_theta_loc,a_tau_loc,b_tau_loc Hyperparameters for the location (see details). 
 #' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale (see details).
 #' @param v_0 Factor for the spike component.
+#' @param burnin Number of samples used as burn in phase, will be set to zero if negative.
 #' @inheritParams mcmc
 #' 
 #' @importFrom stats setNames
@@ -19,10 +20,15 @@ spike_slab <- function(m,
                        a_tau_scl = a_tau_loc,
                        b_tau_scl = b_tau_loc,
                        v_0 = 1e-2,
-                       nsim = 1000, 
+                       nsim = 1000,
+                       burnin = round(nsim * 0.2), 
                        stepsize = sqrt(3) * (m$df)^(-1/6)) {
   
-  M <- nsim
+  if(!is.numeric(burnin) | burnin < 0){
+    burnin <- 0
+  }
+  
+  M <- round(nsim + burnin)
   
   m$tau <- list(location = NA,
                 scale = NA)
@@ -108,6 +114,15 @@ spike_slab <- function(m,
     setTxtProgressBar(pb, mm)
   }
   close(pb)
+  
+  if (burnin > 0) {
+    for (kk in 1:2) {
+      coefs[[kk]] <- coefs[[kk]][-1:-burnin, ]
+      tau[[kk]]   <- tau[[kk]][-1:-burnin, ]
+      delta[[kk]] <- delta[[kk]][-1:-burnin, ]
+      theta[[kk]] <- theta[[kk]][-1:-burnin, ]
+    }
+  }
   
   # delete tau
   m$tau <- NULL

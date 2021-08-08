@@ -16,6 +16,7 @@ spike_slab(
   b_tau_scl = b_tau_loc,
   v_0 = 0.01,
   nsim = 1000,
+  burnin = round(nsim * 0.2),
   stepsize = sqrt(3) * (m$df)^(-1/6)
 )
 }
@@ -29,6 +30,8 @@ spike_slab(
 \item{v_0}{Factor for the spike component.}
 
 \item{nsim}{The number of MCMC samples to draw.}
+
+\item{burnin}{Number of samples used as burn in phase, will be set to zero if negative.}
 
 \item{stepsize}{The step size of the MMALA update.}
 }
