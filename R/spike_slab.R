@@ -139,7 +139,12 @@ spike_slab <- function(m,
   m$spike <- list("coefs" = coefs,
                   "tau" = tau,
                   "delta" = delta,
-                  "theta" = theta)
+                  "theta" = theta,
+                  "hyper" = hyper,
+                  "v_0" = v_0,
+                  "nsim" = nsim,
+                  "burnin" = burnin,
+                  "stepsize" = stepsize)
   
   class(m) <- "lmls_spike"
   
