@@ -10,12 +10,8 @@ sample_tau <- function(delta, a_tau, b_tau, v_0) {
   # OUTPUTS:
   # tau: sampled variances'
   
-  k <- length(delta)
-  tau <- rep(NA, k)
-  for (jj in 1:k) {
-    tau[jj] <- delta * rinvgamma(1, a_tau, b_tau) +
-      (1-delta) * rinvgamma(1, a_tau, b_tau * v_0)
-  }
+  n <- length(delta)
+  tau <- delta * rinvgamma(n, a_tau, b_tau) + (1-delta) * rinvgamma(n, a_tau, b_tau * v_0)
   return(tau)
 }
 
@@ -31,12 +27,13 @@ update_delta <- function(theta, tau, a_tau, b_tau, v_0) {
   # v_0: hyper parameter controling the spike
   # OUTPUTS:
   # delta: updated status of inclusion'
+  n <- length(tau)
   
   num <- theta * dinvgamma(tau, a_tau, b_tau) 
   denum <- theta * dinvgamma(tau, a_tau, b_tau) + (1 - theta) * dinvgamma(tau, a_tau, b_tau * v_0)
   theta_new <- num / denum
   
-  delta <- rbinom(1, 1, theta_new)
+  delta <- rbinom(n, 1, theta_new)
   return(delta)
 }
 
@@ -52,9 +49,10 @@ update_tau <- function(delta, beta, a_tau, b_tau, v_0) {
   # v_0: hyper parameter controling the spike
   # OUTPUTS:
   # tau: updated variances'
+  n <- length(delta)
   
-  tau <- delta * rinvgamma(1, a_tau + 0.5, b_tau + 0.5 * beta^2) +
-    (1-delta) * rinvgamma(1, a_tau + 0.5, b_tau * v_0 + 0.5 * beta^2)
+  tau <- delta * rinvgamma(n, a_tau + 0.5, b_tau + 0.5 * beta^2) +
+    (1-delta) * rinvgamma(n, a_tau + 0.5, b_tau * v_0 + 0.5 * beta^2)
 
   return(tau)
 }
