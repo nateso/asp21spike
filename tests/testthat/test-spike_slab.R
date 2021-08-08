@@ -64,12 +64,12 @@ colMeans(res$spike$delta$location)
 
 # check helper functions for update
 delta <- rep(c(0,1),2)
-bets <- c(2,3,-3,5)
-a_tau <- 1 
-b_tau <- 1
+bets <- c(6,0.1,-6,-0.1)
+a_tau <- 5 
+b_tau <- 50
 a_theta <- 1
 b_theta <- 1
-v_0 <- 0.0000001
+v_0 <- 0.005
 theta <- 0.5
 
 tau <- sample_tau(delta, a_tau, b_tau, v_0)
