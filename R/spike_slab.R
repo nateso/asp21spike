@@ -40,6 +40,8 @@ spike_slab <- function(m,
                 b_tau = setNames(c(b_tau_loc, b_tau_scl), c("location", "scale")))
   
   # intitalise objects
+  # theta <- list(location = matrix(NA, M, 1),
+  #               scale = matrix(NA, M, 1))
   theta <- coefs <- tau <- delta <- list(location = matrix(NA, nrow = M, ncol = ncol(m$x)),
                                          scale = matrix(NA, nrow = M, ncol = ncol(m$z)))
   
@@ -66,25 +68,31 @@ spike_slab <- function(m,
     for (kk in 1:2) {
       n_params <- ncol(coefs[[kk]])
       
+      # current_delta <- delta[[kk]][mm - 1, ]
+      # current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
+      # theta[[kk]][mm, ] <- update_theta(a_theta = hyper$a_theta[kk], 
+      #                                   b_theta = hyper$b_theta[kk], 
+      #                                   delta = current_delta)
+      
+      
       for (ll in 1:n_params) {
         ## update theta_lk
         # first make sure that we are using the most recent deltas
         current_delta <- delta[[kk]][mm, ]
-        current_delta[is.na(current_delta)] <- delta[[kk]][mm-1, is.na(current_delta)]
-        theta[[kk]][mm, ll] <- update_theta(a_theta = hyper$a_theta[kk], 
-                                            b_theta = hyper$b_theta[kk], 
+        current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
+        theta[[kk]][mm, ll] <- update_theta(a_theta = hyper$a_theta[kk],
+                                            b_theta = hyper$b_theta[kk],
                                             delta = current_delta)
         # this makes sure that we always include the intercept in the model
         # the intercept is always assigned to the slab. However, this does not 
         # imply a flat prior --> need to incorporate.
         has_intercept <- "(Intercept)" %in% names(m$coefficients[[kk]])
-        if(has_intercept){
-          theta[[kk]][mm, 1] <- 1
-        }
-        
+        # if(has_intercept){
+        #   theta[[kk]][mm, 1] <- 1
+        # }
         ## update delta_lk
         delta[[kk]][mm, ll] <- update_delta(theta = theta[[kk]][mm, ll], 
-                                            tau = tau[[kk]][mm-1, ll], 
+                                            tau = tau[[kk]][mm - 1, ll], 
                                             a_tau = hyper$a_tau[kk], 
                                             b_tau = hyper$b_tau[kk], 
                                             v_0 = v_0)
@@ -93,7 +101,7 @@ spike_slab <- function(m,
         tau[[kk]][mm, ll] <- update_tau(a_tau = hyper$a_tau[kk], 
                                         b_tau = hyper$b_tau[kk], 
                                         v_0 = v_0, 
-                                        beta = coefs[[kk]][mm-1, ll], 
+                                        beta = coefs[[kk]][mm - 1, ll], 
                                         delta = delta[[kk]][mm, ll])
       }
       
