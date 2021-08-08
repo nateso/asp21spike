@@ -13,11 +13,8 @@ sample_tau <- function(delta, a_tau, b_tau, v_0) {
   k <- length(delta)
   tau <- rep(NA, k)
   for (jj in 1:k) {
-    if (delta[jj] == 1) {
-      tau[jj] <- rinvgamma(1, a_tau, b_tau)
-    } else {
-      tau[jj] <- rinvgamma(1, a_tau, b_tau * v_0)
-    }
+    tau[jj] <- delta * rinvgamma(1, a_tau, b_tau) +
+      (1-delta) * rinvgamma(1, a_tau, b_tau * v_0)
   }
   return(tau)
 }
@@ -56,11 +53,9 @@ update_tau <- function(delta, beta, a_tau, b_tau, v_0) {
   # OUTPUTS:
   # tau: updated variances'
   
-  if (delta == 0) {
-    tau <- rinvgamma(1, a_tau + 0.5, b_tau * v_0 + 0.5 * beta^2)
-  } else {
-    tau <- rinvgamma(1, a_tau + 0.5, b_tau + 0.5 * beta^2)
-  }
+  tau <- delta * rinvgamma(1, a_tau + 0.5, b_tau + 0.5 * beta^2) +
+    (1-delta) * rinvgamma(1, a_tau + 0.5, b_tau * v_0 + 0.5 * beta^2)
+
   return(tau)
 }
 
