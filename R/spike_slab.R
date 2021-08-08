@@ -1,12 +1,12 @@
-
-
-
 #' Title
 #'
 #' @param a_theta_loc,b_theta_loc,a_tau_loc,b_tau_loc Hyperparameters for the location (see details). 
 #' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale (see details).
 #' @param v_0 Factor for the spike component.
 #' @inheritParams mcmc
+#' 
+#' @importFrom stats setNames
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #'
 #' @export
 spike_slab <- function(m,

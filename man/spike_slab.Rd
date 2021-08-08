@@ -14,7 +14,7 @@ spike_slab(
   b_theta_scl = b_theta_loc,
   a_tau_scl = a_tau_loc,
   b_tau_scl = b_tau_loc,
-  nu0 = 1e-08,
+  v_0 = 0.01,
   nsim = 1000,
   stepsize = sqrt(3) * (m$df)^(-1/6)
 )
@@ -26,11 +26,11 @@ spike_slab(
 
 \item{a_theta_scl, b_theta_scl, a_tau_scl, b_tau_scl}{Hyperparameters for the scale (see details).}
 
+\item{v_0}{Factor for the spike component.}
+
 \item{nsim}{The number of MCMC samples to draw.}
 
 \item{stepsize}{The step size of the MMALA update.}
-
-\item{v_0}{Factor for the spike component.}
 }
 \description{
 Title
