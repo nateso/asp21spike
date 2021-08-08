@@ -5,8 +5,8 @@ sample_tau <- function(delta, a_tau, b_tau, v_0) {
   # 'INPUTS:
   # delta: status of inclusion
   # a_tau: hyper parameter for inverse gamma distribution
-  # b_tau: hyper paramerer for inverse gamma distribution
-  # v_0: hyper parameter controling the spike
+  # b_tau: hyper parameter for inverse gamma distribution
+  # v_0: hyper parameter controlling the spike
   # OUTPUTS:
   # tau: sampled variances'
   
