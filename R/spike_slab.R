@@ -4,6 +4,7 @@
 #' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale (see details).
 #' @param v_0 Factor for the spike component.
 #' @param burnin Number of samples used as burn in phase, will be set to zero if negative.
+#' @param prog_bar Show a progress bar?
 #' @inheritParams mcmc
 #' 
 #' @importFrom stats setNames
@@ -22,7 +23,8 @@ spike_slab <- function(m,
                        v_0 = 1e-2,
                        nsim = 1000,
                        burnin = round(nsim * 0.2), 
-                       stepsize = sqrt(3) * (m$df)^(-1/6)) {
+                       stepsize = sqrt(3) * (m$df)^(-1/6), 
+                       prog_bar = TRUE) {
   
   if(!is.numeric(burnin) | burnin < 0){
     burnin <- 0
@@ -63,7 +65,9 @@ spike_slab <- function(m,
   }
   
   # update parameters
-  pb <- txtProgressBar(0, M, style = 3)
+  if(prog_bar) {
+    pb <- txtProgressBar(0, M, style = 3)
+  }
   for (mm in 2:M) {
     for (kk in 1:2) {
       n_params <- ncol(coefs[[kk]])
@@ -119,9 +123,13 @@ spike_slab <- function(m,
                               stepsize = stepsize)
       coefs[[kk]][mm, ] <- coef(m)[[param]]
     }
-    setTxtProgressBar(pb, mm)
+    if(prog_bar) {
+      setTxtProgressBar(pb, mm)
+    }
   }
-  close(pb)
+  if(prog_bar) {
+    close(pb)
+  }
   
   if (burnin > 0) {
     for (kk in 1:2) {

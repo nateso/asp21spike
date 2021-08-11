@@ -17,7 +17,8 @@ spike_slab(
   v_0 = 0.01,
   nsim = 1000,
   burnin = round(nsim * 0.2),
-  stepsize = sqrt(3) * (m$df)^(-1/6)
+  stepsize = sqrt(3) * (m$df)^(-1/6),
+  prog_bar = TRUE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ spike_slab(
 \item{burnin}{Number of samples used as burn in phase, will be set to zero if negative.}
 
 \item{stepsize}{The step size of the MMALA update.}
+
+\item{prog_bar}{Show a progress bar?}
 }
 \description{
 Title
