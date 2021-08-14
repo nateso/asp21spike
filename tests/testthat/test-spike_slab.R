@@ -1,4 +1,3 @@
-
 # simulate some data -----------------------------------------------
 set.seed(1509)
 n <- 100
@@ -27,6 +26,7 @@ m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
 
 # test spike_slab -------------------------------------------
 spsl <- spike_slab(m,v_0 = 0.005)
+summary(spsl)
 barplot(colMeans(spsl$spike$delta$location))
 
 
