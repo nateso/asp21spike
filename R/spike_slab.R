@@ -32,9 +32,9 @@ spike_slab <- function(m,
   
   M <- round(nsim + burnin)
   
-  m$tau <- list(location = NA,
-                scale = NA)
-  
+  # m$tau <- list(location = NA,
+  #               scale = NA)
+  # 
   # initialise hyperparameters
   hyper <- list(a_theta = setNames(c(a_theta_loc, a_theta_scl), c("location", "scale")),
                 b_theta = setNames(c(b_theta_loc, b_theta_scl), c("location", "scale")),
@@ -47,18 +47,35 @@ spike_slab <- function(m,
   theta <- coefs <- tau <- delta <- list(location = matrix(NA, nrow = M, ncol = ncol(m$x)),
                                          scale = matrix(NA, nrow = M, ncol = ncol(m$z)))
   
+  which_intercept <- has_intercept <- c("location" = NA,
+                                        "scale" = NA)
+  
   # initialise parameters
   for (k in 1:2) {
+    # this makes sure that we always include the intercept in the model
+    # the intercept is always assigned to the slab. However, this does not 
+    # imply a flat prior --> need to incorporate.
+    has_intercept[k] <- "(Intercept)" %in% names(m$coefficients[[k]])
+    if(has_intercept[k]) {
+      which_intercept[k] <- which(names(m$coefficients[[k]]) == "(Intercept)")
+    } else {
+      which_intercept[k] <- -1
+    }
+    
     n_params <- ncol(delta[[k]])
     theta[[k]][1, ] <- rbeta(n_params, hyper$a_theta[k], hyper$b_theta[k])
     for(l in 1:n_params){
-      delta[[k]][1, l] <- rbinom(1, 1, theta[[k]][1, l])
+      if(names(m$coefficients[[k]])[l] == "(Intercept)") {
+        delta[[k]][1, l] <- 1
+      } else {
+        delta[[k]][1, l] <- rbinom(1, 1, theta[[k]][1, l])
+      }
       tau[[k]][1, l] <- sample_tau(delta = delta[[k]][1, l], 
                                    a_tau = hyper$a_tau[k], 
                                    b_tau = hyper$b_tau[k], 
                                    v_0 = v_0)
     }
-    m$tau[[k]] <- tau[[k]][1, ]
+    ## m$tau[[k]] <- tau[[k]][1, ]
     
     param <- names(delta)[k]
     coefs[[k]][1, ] <- coef(mmala_update(m, param, stepsize = stepsize))[[param]]
@@ -70,7 +87,20 @@ spike_slab <- function(m,
   }
   for (mm in 2:M) {
     for (kk in 1:2) {
+      # this makes sure that we always include the intercept in the model
+      # the intercept is always assigned to the slab. However, this does not 
+      # imply a flat prior --> need to incorporate.
+      # has_intercept <- "(Intercept)" %in% names(m$coefficients[[k]])
+      
       n_params <- ncol(coefs[[kk]])
+      
+      # Update coefficients
+      param <- names(delta)[kk]
+      m <- mmala_update_spike(curr_m = m, 
+                              curr_tau = tau[[kk]][mm - 1, ],
+                              predictor = param, 
+                              stepsize = stepsize)
+      coefs[[kk]][mm, ] <- coef(m)[[param]]
       
       # current_delta <- delta[[kk]][mm - 1, ]
       # current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
@@ -79,49 +109,44 @@ spike_slab <- function(m,
       #                                   delta = current_delta)
       
       
+      ## update taus in the model
+      # as of now this first samples all other parameters first and then samples 
+      # the coefficients all together. However, it makes more sense to sample the
+      # coefficient values within the loop. 
+      
+      # m$tau[[kk]] <- tau[[kk]][mm, ]
+      
       for (ll in 1:n_params) {
-        ## update theta_lk
+        
         # first make sure that we are using the most recent deltas
         current_delta <- delta[[kk]][mm, ]
         current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
-        theta[[kk]][mm, ll] <- update_theta(a_theta = hyper$a_theta[kk],
-                                            b_theta = hyper$b_theta[kk],
-                                            delta = current_delta)
-        # this makes sure that we always include the intercept in the model
-        # the intercept is always assigned to the slab. However, this does not 
-        # imply a flat prior --> need to incorporate.
-        has_intercept <- "(Intercept)" %in% names(m$coefficients[[kk]])
-        # if(has_intercept){
-        #   theta[[kk]][mm, 1] <- 1
-        # }
-        ## update delta_lk
-        delta[[kk]][mm, ll] <- update_delta(theta = theta[[kk]][mm, ll], 
-                                            tau = tau[[kk]][mm - 1, ll], 
-                                            a_tau = hyper$a_tau[kk], 
-                                            b_tau = hyper$b_tau[kk], 
-                                            v_0 = v_0)
         
         ## update tau_lk
         tau[[kk]][mm, ll] <- update_tau(a_tau = hyper$a_tau[kk], 
                                         b_tau = hyper$b_tau[kk], 
                                         v_0 = v_0, 
                                         beta = coefs[[kk]][mm - 1, ll], 
-                                        delta = delta[[kk]][mm, ll])
+                                        delta = current_delta[ll])
+        
+        if(ll == which_intercept[[kk]]){
+          theta[[kk]][mm, ll] <- 1
+          delta[[kk]][mm, ll] <- 1
+        } else {
+          
+          ## update theta_lk
+          theta[[kk]][mm, ll] <- update_theta(a_theta = hyper$a_theta[kk],
+                                              b_theta = hyper$b_theta[kk],
+                                              delta = current_delta[ll])
+          
+          ## update delta_lk
+          delta[[kk]][mm, ll] <- update_delta(theta = theta[[kk]][mm, ll], 
+                                              tau = tau[[kk]][mm - 1, ll], 
+                                              a_tau = hyper$a_tau[kk], 
+                                              b_tau = hyper$b_tau[kk], 
+                                              v_0 = v_0)
+        }
       }
-      
-      ## update taus in the model
-      # as of now this first samples all other parameters first and then samples 
-      # the coefficients all together. However, it makes more sense to sample the
-      # coefficient values within the loop. 
-      
-      m$tau[[kk]] <- tau[[kk]][mm, ]
-      
-      # Lastly update coefficients
-      param <- names(delta)[kk]
-      m <- mmala_update_spike(curr_m = m, 
-                              predictor = param, 
-                              stepsize = stepsize)
-      coefs[[kk]][mm, ] <- coef(m)[[param]]
     }
     if(prog_bar) {
       setTxtProgressBar(pb, mm)
