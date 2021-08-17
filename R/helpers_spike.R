@@ -1,5 +1,12 @@
 #' @importFrom invgamma rinvgamma
 
+sample_tau_nosel <- function(n,a_tau, b_tau){
+  #return(rinvgamma(n, a_tau, b_tau))
+  tau <- rep(1e10,n)
+  return(tau)
+}
+
+#' @importFrom invgamma rinvgamma
 sample_tau <- function(delta, a_tau, b_tau, v_0) {
   
   # 'INPUTS:
@@ -56,6 +63,15 @@ update_tau <- function(delta, beta, a_tau, b_tau, v_0) {
 
   return(tau)
 }
+
+#' @importFrom invgamma rinvgamma
+
+update_tau_nosel <- function(beta, a_tau, b_tau){
+  n <- length(beta)
+  tau <- rinvgamma(n,a_tau + 0.5, b_tau + 0.5 * beta^2)
+  return(tau)
+}
+
 
 #' @importFrom stats rbeta
 
