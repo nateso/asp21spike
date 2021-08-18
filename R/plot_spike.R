@@ -52,8 +52,8 @@ plot.lmls_spike <- function(x, parameter = 'location',
         plot(x$spike$coefs[[parameter]][,jj], 
              type = "l",
              main = paste("Random Walk of",cov_names[[jj]]),
-             xlab = cov_names[[jj]],
-             ylab = "coefficient")
+             xlab = "iteration",
+             ylab = paste('coef of',cov_names[[jj]]))
       }
     }
 

@@ -8,9 +8,9 @@
 #' @export
 print.lmls_spike <- function(x, ...) {
   probs_loc <- colMeans(x$spike$delta$location)
-  names(probs_loc) <- colnames(x$x)
+  names(probs_loc) <- colnames(x$spike$delta$location)
   probs_scl <- colMeans(x$spike$delta$scale)
-  names(probs_scl) <- colnames(x$z)
+  names(probs_scl) <- colnames(x$spike$delta$scale)
   cat("- Spike and slab prior variable selection -\n\n",
       x$nobs, " observations, ", x$spike$nsim, " iterations\n\n",
       "Inclusion probabilities: \nLocation:\n", sep = "")
