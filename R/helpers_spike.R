@@ -1,8 +1,7 @@
 #' @importFrom invgamma rinvgamma
 
 sample_tau_nosel <- function(n,a_tau, b_tau){
-  #return(rinvgamma(n, a_tau, b_tau))
-  tau <- rep(1e10,n)
+  tau <- rinvgamma(n, a_tau, b_tau)
   return(tau)
 }
 

@@ -42,8 +42,8 @@ spike_slab_test <- function(m,
     m$z <- apply(m$z,2,function(x){x-mean(x)})
   }
   
-  ## ensure flat prior for intercept--------------------------------------------
-  # this enables us to implement flat priors for all variables which should
+  ## Normal prior for intercept----------------------------------------------
+  # this enables us to implement normal priors for all variables which should
   # always be kept in the model, as well as for the intercept.
   always_in <- list(location = always_in_loc,
                     scale = always_in_scl)
@@ -80,31 +80,32 @@ spike_slab_test <- function(m,
                        scale = matrix(NA, nrow = M, ncol = ncol(m$z)))
   
   theta <- delta <- list(location = matrix(NA, nrow = M, ncol = n_select['location']),
-                         scale = matrix(NA, nrow = M, ncol = n_select['scale']))
+                         scale = matrix(NA, nrow = M, ncol = n_select['scale'])) # only for variables subject to selection
   
   # initialise parameters
   for (k in 1:2){
     theta[[k]][1, ] <- rbeta(n_select[k], hyper$a_theta[k], hyper$b_theta[k])
     delta[[k]][1, ] <- rbinom(n_select[k], 1, theta[[k]][1, ])
-    if(n_always_in[k] != 0){
-      tau[[k]][1,which_always_in[[k]]] <- 1e10
-    }
     if(n_select[k] != 0){
       tau[[k]][1,which_select[[k]]] <- sapply(delta[[k]][1,],sample_tau,
                                               a_tau = hyper$a_tau[k],
                                               b_tau = hyper$b_tau[k],
                                               v_0 = v_0)
     }
+    if(n_always_in[k] != 0){
+      tau[[k]][1,which_always_in[[k]]] <- sample_tau_nosel(n_always_in[k],
+                                                           hyper$a_tau[k],
+                                                           hyper$b_tau[k]) # prior for hyper-variance if variable not subject to selection
+    }
     param <- names(delta)[k]
+    
     if(random_init == TRUE){
-      coefs[[k]][1, ] <- runif(ncol(coefs[[k]]),0,1)
+      coefs[[k]][1, ] <- runif(ncol(coefs[[k]]),-100,100) # random initialization of coefficients
     }
     if(random_init == FALSE){
-      coefs[[k]][1, ] <- coef(mmala_update(m, param, stepsize = stepsize))[[param]]
-      
+      coefs[[k]][1, ] <- coef(mmala_update(m, param, stepsize = stepsize))[[param]] # ML initialization
     }
   }
-  
   
   # update parameters-----------------------------------------------------------
   if(prog_bar) {
@@ -113,22 +114,22 @@ spike_slab_test <- function(m,
   for (mm in 2:M) {
     for (kk in 1:2) {
       # Update coefficients
-      param <- names(delta)[kk]
+      param <- names(delta)[kk] # extract 'location' or 'scale'
       m <- mmala_update_spike(curr_m = m, 
                               curr_tau = tau[[kk]][mm - 1, ],
                               predictor = param, 
                               stepsize = stepsize)
       coefs[[kk]][mm, ] <- coef(m)[[param]]
 
-      # first update taus for coefficients, which are always in the model
+      # first update hyper-variances for coefficients, which are not subject to selection
       if(length(n_always_in[k]) != 0){
         tau[[kk]][mm,which_always_in[[kk]]] <- update_tau_nosel(beta = coefs[[kk]][mm,which_always_in[[kk]]],
-                                                               a_tau = hyper$a_tau[kk],
-                                                               b_tau = hyper$b_tau[kk])
+                                                                a_tau = hyper$a_tau[kk],
+                                                                b_tau = hyper$b_tau[kk])
       }
       # second, update parameters for all coefficients subject to selection
       for (ll in which_select[[kk]]){
-        iter <- which(which_select[[kk]] == ll)
+        iter <- which(which_select[[kk]] == ll) # iter runs from 1 to ncol(delta), while ll iterates over all columns in tau and coef which are subject to selection
         
         # make sure that we are using the most recent deltas
         current_delta <- delta[[kk]][mm, ]
