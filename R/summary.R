@@ -6,7 +6,7 @@
 #' @method summary lmls_spike
 #' 
 #' @export
-summary.lmls_spike <- function(object) {
+summary.lmls_spike <- function(object, ...) {
   x <- object
   coefs_loc <- x$spike$coefs$location
   delta_loc <- x$spike$delta$location

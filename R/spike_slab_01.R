@@ -5,6 +5,9 @@
 #' @param v_0 Factor for the spike component.
 #' @param burnin Number of samples used as burn in phase, will be set to zero if negative.
 #' @param prog_bar Show a progress bar?
+#' @param always_in_loc,always_in_scl Select the variables which are NOT subject to selection.
+#' @param center Center the variables?
+#' @param random_init Randomise starting values for coefficients?
 #' @inheritParams mcmc
 #' 
 #' @importFrom stats setNames
@@ -37,9 +40,9 @@ spike_slab_test <- function(m,
   M <- round(nsim + burnin)
   
   ## center data-------------------------------------------------------------
-  if(center == T){
-    m$x <- apply(m$x,2,function(x){x-mean(x)})
-    m$z <- apply(m$z,2,function(x){x-mean(x)})
+  if(center == TRUE){
+    m$x <- apply(m$x, 2, function(x){x - mean(x)})
+    m$z <- apply(m$z, 2, function(x){x - mean(x)})
   }
   
   ## Normal prior for intercept----------------------------------------------
@@ -53,12 +56,12 @@ spike_slab_test <- function(m,
                                'scale' = NA)
   for(k in 1:2){
     has_intercept <- "(Intercept)" %in% names(m$coefficients[[k]])
-    if(has_intercept == T){
-      always_in[[k]] <- c("(Intercept)",always_in[[k]])
+    if(has_intercept == TRUE){
+      always_in[[k]] <- c("(Intercept)", always_in[[k]])
     }
     if(length(always_in[[k]]) != 0){
       which_always_in[[k]] <- which(names(m$coefficients[[k]]) %in% always_in[[k]])
-      which_select[[k]] <- which((names(m$coefficients[[k]]) %in% always_in[[k]]) == F)
+      which_select[[k]] <- which((names(m$coefficients[[k]]) %in% always_in[[k]]) == FALSE)
     }
     else{
       which_select[[k]] <- 1:length(names(m$coefficients[[k]]))

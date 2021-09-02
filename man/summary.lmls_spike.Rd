@@ -4,7 +4,7 @@
 \alias{summary.lmls_spike}
 \title{Summary for spike and slab priors}
 \usage{
-\method{summary}{lmls_spike}(object)
+\method{summary}{lmls_spike}(object, ...)
 }
 \arguments{
 \item{object}{Object of class lmls_spike}

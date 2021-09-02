@@ -2,18 +2,27 @@
 #' Plot Method for lmls_spike object
 #' This is some description
 #' 
+#' @param x Object of class spike_lmls
+#' @param parameter Takes a string which coefficients should be plotted, 'location' (default) or 'scale', can be abbreviated.
+#' @param plot_type Can be one of 'inclusion' (default), 'posterior' or 'random walk', can be abbreviated.
+#' @param ... Currently not used
+#' 
 #' @importFrom graphics abline barplot par hist lines
-#' @param x object of class spike_lmls
-#' @param parameter takes a string which coefficients should be plotted, location or scale (default location)
-#' @param plot_posterior Boolean whether to plot the posterior distributions or not (default FALSE). If False it plots inclusion probabilities.
+#' @importFrom stats density sd
+#' 
 #' @export
 
-plot.lmls_spike <- function(x, parameter = 'location', 
-                            plot_type = "inclusion"){
-  plot_posterior <- ifelse(plot_type == "posterior",T,F)
-  plot_random_walk <- ifelse(plot_type == "random walk",T,F)
+plot.lmls_spike <- function(x,
+                            parameter = "location", 
+                            plot_type = "inclusion",
+                            ...){
+  parameter <- match.arg(parameter, c("location", "scale"))
+  plot_type <- match.arg(plot_type, c("inclusion", "posterior", "random walk"))
   
-  if(all(plot_posterior == F,plot_random_walk == F)){
+  plot_posterior <- plot_type == "posterior"
+  plot_random_walk <- plot_type == "random walk"
+  
+  if(all(plot_posterior == FALSE, plot_random_walk == FALSE)){
     cov_names <- names(x$spike$delta[[parameter]])
     p <- colMeans(x$spike$delta[[parameter]])
     names(p) <- cov_names
@@ -21,11 +30,8 @@ plot.lmls_spike <- function(x, parameter = 'location',
             main = paste("inclusion probabilities for",parameter),
             ylab = 'average inclusion',
             ylim = c(0,1))
-    abline(h = 0.5, col = "red", lty = 'dashed')
-    abline(h = 0.25, col = 'red', lty = 'dashed')
-    abline(h = 0.75, col = 'red', lty = 'dashed')
-  }
-  else{
+    abline(h = 1:3 * 0.25, col = "red", lty = "dashed")
+  } else {
     cov_names <- names(x$spike$coefs[[parameter]])
     k <- ncol(x$spike$coefs[[parameter]])
     n <- nrow(x$spike$coefs[[parameter]])
