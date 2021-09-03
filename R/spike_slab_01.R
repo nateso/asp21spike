@@ -6,8 +6,7 @@
 #' @param burnin Number of samples used as burn in phase, will be set to zero if negative.
 #' @param prog_bar Show a progress bar?
 #' @param always_in_loc,always_in_scl Select the variables which are NOT subject to selection.
-#' @param center Center the variables?
-#' @param random_init Randomise starting values for coefficients?
+#' @param coef_init Single value. If not NULL (default), the coefficients will be initialised with the given value.
 #' @inheritParams mcmc
 #' 
 #' @importFrom stats setNames
@@ -30,20 +29,18 @@ spike_slab_test <- function(m,
                        prog_bar = TRUE,
                        always_in_loc = NULL,
                        always_in_scl = NULL,
-                       center = TRUE,
-                       random_init = TRUE){
+                       coef_init = NULL,
+                       seed = NULL){
+  
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   
   if(!is.numeric(burnin) | burnin < 0){
     burnin <- 0
   }
   
   M <- round(nsim + burnin)
-  
-  ## center data-------------------------------------------------------------
-  if(center == TRUE){
-    m$x <- apply(m$x, 2, function(x){x - mean(x)})
-    m$z <- apply(m$z, 2, function(x){x - mean(x)})
-  }
   
   ## Normal prior for intercept----------------------------------------------
   # this enables us to implement normal priors for all variables which should
@@ -102,15 +99,15 @@ spike_slab_test <- function(m,
     }
     param <- names(delta)[k]
     
-    if(random_init == TRUE){
-      coefs[[k]][1, ] <- runif(ncol(coefs[[k]]),-100,100) # random initialization of coefficients
-    }
-    if(random_init == FALSE){
+    if(!is.null(coef_init)){
+      coefs[[k]][1, ] <- coef_init # runif(ncol(coefs[[k]]),-100,100) # random initialization of coefficients
+    } else {
       coefs[[k]][1, ] <- coef(mmala_update(m, param, stepsize = stepsize))[[param]] # ML initialization
     }
   }
   
   # update parameters-----------------------------------------------------------
+  mod_tmp <- m
   if(prog_bar) {
     pb <- txtProgressBar(0, M, style = 3)
   }
@@ -118,11 +115,11 @@ spike_slab_test <- function(m,
     for (kk in 1:2) {
       # Update coefficients
       param <- names(delta)[kk] # extract 'location' or 'scale'
-      m <- mmala_update_spike(curr_m = m, 
+      mod_tmp <- mmala_update_spike(curr_m = mod_tmp, 
                               curr_tau = tau[[kk]][mm - 1, ],
                               predictor = param, 
                               stepsize = stepsize)
-      coefs[[kk]][mm, ] <- coef(m)[[param]]
+      coefs[[kk]][mm, ] <- coef(mod_tmp)[[param]]
 
       # first update hyper-variances for coefficients, which are not subject to selection
       if(length(n_always_in[k]) != 0){
