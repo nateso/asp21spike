@@ -7,7 +7,7 @@
 #' @param plot_type Can be one of 'inclusion' (default), 'posterior' or 'random walk', can be abbreviated.
 #' @param ... Currently not used
 #' 
-#' @importFrom graphics abline barplot par hist lines
+#' @importFrom graphics abline barplot par hist lines axis
 #' @importFrom stats density sd
 #' 
 #' @export
@@ -29,8 +29,10 @@ plot.lmls_spike <- function(x,
     barplot(p,
             main = paste("inclusion probabilities for",parameter),
             ylab = 'average inclusion',
-            ylim = c(0,1))
-    abline(h = 1:3 * 0.25, col = "red", lty = "dashed")
+            ylim = c(0,1),
+            axes = FALSE)
+    abline(h = c(0.5, 0.75, 0.9), col = "red", lty = "dashed")
+    axis(2, at = c(0, 0.25, 0.5, 0.75, 0.9, 1))
   } else {
     cov_names <- names(x$spike$coefs[[parameter]])
     k <- ncol(x$spike$coefs[[parameter]])
