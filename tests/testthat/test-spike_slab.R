@@ -28,7 +28,7 @@ m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
 
 # test spike_slab -------------------------------------------
 
-spsl <- spike_slab_test(m,
+spsl <- spike_slab(m,
                    v_0 = 0.05,
                    a_theta_loc = 1,
                    b_theta_loc = 1,
@@ -38,63 +38,63 @@ spsl <- spike_slab_test(m,
                    b_tau_loc = 50,
                    a_tau_scl = 5,
                    b_tau_scl = 50,
-                   center = FALSE,
                    burnin = 10,
-                   random_init = TRUE,
+                   coef_init = 0,
                    #always_in_loc = 'x4',
-                   nsim = 10000,
-                   seed = 123)
-summary(spsl)
-plot(spsl$spike$delta$location[, 4], type = "l")
-plot(spsl, "location", "inc")
-plot(spsl, "location", "post")
-plot(spsl, "location", "rand")
-barplot(colMeans(spsl$spike$delta$location))
+                   nsim = 1000,
+                   seed = 123, 
+                   prog_bar = FALSE)
+# summary(spsl)
+# plot(spsl$spike$delta$location[, 4], type = "l")
+# plot(spsl, "location", "inc")
+# plot(spsl, "location", "post")
+# plot(spsl, "location", "rand")
+# barplot(colMeans(spsl$spike$delta$location))
 
 
-set.seed(243)
-spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 5000)
-plot(spsl,'location')
+# set.seed(243)
+# spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 5000)
+# plot(spsl,'location')
+# 
+# set.seed(243)
+# spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 10000)
+# plot(spsl,'location')
+# 
+# 
+# set.seed(243)
+# spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 50000)
+# plot(spsl,'location')
 
-set.seed(243)
-spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 10000)
-plot(spsl,'location')
-
-
-set.seed(243)
-spsl <- spike_slab(m,v_0 = 0.005,a_tau_loc = 3,b_tau_loc = 25,nsim = 50000)
-plot(spsl,'location')
-
-set.seed(1312424)
-n <- 200
-snr <- 3
-sm1 <- runif(n)
-fsm1 <- dbeta(sm1, 7, 3)/2
-sm2 <- runif(n, 0, 1)
-f <- gl(3, n/3)
-ff <- as.numeric(f)/2
-fsm2f <- ff + ff * sm2 + ((f == 1) * -dbeta(sm2, 6, 4) +
-                               + (f == 2) * dbeta(sm2, 6, 9) + (f == 3) * dbeta(sm2,
-                                                                                + 9, 6))/2
-lin <- matrix(rnorm(n * 3), n, 3)
-colnames(lin) <- paste("lin", 1:3, sep = "")
-noise1 <- sm1 + rnorm(n)
-noise2 <- runif(n)
-noise3 <- runif(n)
-noise4 <- sample(gl(4, n/4))
-eta <- fsm1 + fsm2f + lin %*% c(0.1, 0.2, 0.3)
-y <- eta + sd(eta)/snr * rt(n, df = 5)
-d <- data.frame(y, sm1, sm2, f, lin, noise1, noise2,
-                   noise3, noise4)
-f1 <- y ~ (sm1 + sm2 + f + lin1)^2 + lin2 + lin3 + noise1 + 
-  noise2 + noise3 + noise4
-
-m <- lmls(location = f1,scale = f1,
-     data = d,
-     light = FALSE,maxit = 1000)
-
-res <- spike_slab(m)
-colMeans(res$spike$delta$location)
+# set.seed(1312424)
+# n <- 200
+# snr <- 3
+# sm1 <- runif(n)
+# fsm1 <- dbeta(sm1, 7, 3)/2
+# sm2 <- runif(n, 0, 1)
+# f <- gl(3, n/3)
+# ff <- as.numeric(f)/2
+# fsm2f <- ff + ff * sm2 + ((f == 1) * -dbeta(sm2, 6, 4) +
+#                                + (f == 2) * dbeta(sm2, 6, 9) + (f == 3) * dbeta(sm2,
+#                                                                                 + 9, 6))/2
+# lin <- matrix(rnorm(n * 3), n, 3)
+# colnames(lin) <- paste("lin", 1:3, sep = "")
+# noise1 <- sm1 + rnorm(n)
+# noise2 <- runif(n)
+# noise3 <- runif(n)
+# noise4 <- sample(gl(4, n/4))
+# eta <- fsm1 + fsm2f + lin %*% c(0.1, 0.2, 0.3)
+# y <- eta + sd(eta)/snr * rt(n, df = 5)
+# d <- data.frame(y, sm1, sm2, f, lin, noise1, noise2,
+#                    noise3, noise4)
+# f1 <- y ~ (sm1 + sm2 + f + lin1)^2 + lin2 + lin3 + noise1 + 
+#   noise2 + noise3 + noise4
+# 
+# m <- lmls(location = f1,scale = f1,
+#      data = d,
+#      light = FALSE,maxit = 1000)
+# 
+# res <- spike_slab(m)
+# colMeans(res$spike$delta$location)
 
 
 # check helper functions for update

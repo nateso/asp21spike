@@ -25,12 +25,12 @@ f <- function(x, predictor) {
 
 test_that("score of beta is correct", {
   num_score <- numDeriv::grad(f, beta, predictor = "location")
-  expect_exactly(score_spike(m, "location"), num_score)
+  expect_exactly(score_spike(m, m$tau$location, "location"), num_score)
 })
 
 test_that("score of gamma is correct", {
   num_score <- numDeriv::grad(f, gamma, predictor = "scale")
-  expect_exactly(score_spike(m, "scale"), num_score)
+  expect_exactly(score_spike(m, m$tau$scale, "scale"), num_score)
 })
 
 # fisher info -----------------------------------------------------------------
@@ -49,20 +49,22 @@ reps <- replicate(nsim, {
   m <- set_coef(m, "scale", gamma)
   m$tau$location <- rep(1, 3)
   m$tau$scale    <- rep(1, 3)
-  c(score_beta_spike(m), score_gamma_spike(m))
+  c(score_beta_spike(m, m$tau$location), score_gamma_spike(m, m$tau$scale))
 })
 
 num_info <- cov(t(reps))
 
 test_that("fisher info of beta is correct", {
-  expect_roughly(info_beta_spike(m), num_info[1:3, 1:3])
+  expect_roughly(info_beta_spike(m, m$tau$location), num_info[1:3, 1:3])
 })
 
 test_that("fisher info of gamma is correct", {
-  expect_roughly(info_gamma_spike(m), num_info[4:6, 4:6])
+  expect_roughly(info_gamma_spike(m, m$tau$scale), num_info[4:6, 4:6])
 })
 
 test_that("chol_info() works", {
-  expect_equal(chol_info_spike(m, "location"), chol(info_beta_spike(m)))
-  expect_equal(chol_info_spike(m, "scale"), chol(info_gamma_spike(m)))
+  expect_equal(chol_info_spike(m, m$tau$location, "location"), 
+               chol(info_beta_spike(m, m$tau$location)))
+  expect_equal(chol_info_spike(m, m$tau$scale, "scale"), 
+               chol(info_gamma_spike(m, m$tau$scale)))
 })
