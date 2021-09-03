@@ -13,7 +13,7 @@
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #'
 #' @export
-spike_slab_test <- function(m,
+spike_slab <- function(m,
                        a_theta_loc = 0.5,
                        b_theta_loc = 0.5,
                        a_tau_loc = 1,
