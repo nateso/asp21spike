@@ -192,7 +192,11 @@ spike_slab <- function(m,
                   "v_0" = v_0,
                   "nsim" = nsim,
                   "burnin" = burnin,
-                  "stepsize" = stepsize)
+                  "stepsize" = stepsize,
+                  "always_in_loc" = always_in_loc,
+                  "always_in_scl" = always_in_scl,
+                  "coef_init" = coef_init,
+                  "seed" = seed)
   
   class(m) <- "lmls_spike"
   
