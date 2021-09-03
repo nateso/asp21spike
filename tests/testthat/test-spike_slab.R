@@ -10,11 +10,13 @@ for(jj in 1:length(mu)){
   X[,jj] <- rnorm(n,mu[jj],sigma[jj])
 }
 
-bets <- matrix(c(-2,6,3,0,0))
-gams <- matrix(c(0,0,5,1,-1))
+bets <- matrix(c(2,6,3,0,0))
+gams <- matrix(c(2,6,3,0,0))
 
 y <- rnorm(n, X %*% bets, exp(-3 + X %*% gams))
-y_noise <- y + rnorm(n,5,200)
+y_noise <- y + rnorm(n,0,1)
+
+y <- y_noise
 
 test_data <- cbind.data.frame(y,X)
 names(test_data) <- c("y",paste0("x",1:5))
@@ -25,8 +27,28 @@ m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
           light = FALSE,maxit = 1000)
 
 # test spike_slab -------------------------------------------
-spsl <- spike_slab(m,v_0 = 0.005)
+
+spsl <- spike_slab_test(m,
+                   v_0 = 0.05,
+                   a_theta_loc = 1,
+                   b_theta_loc = 1,
+                   a_theta_scl = 1,
+                   b_theta_scl = 1,
+                   a_tau_loc = 5,
+                   b_tau_loc = 50,
+                   a_tau_scl = 5,
+                   b_tau_scl = 50,
+                   center = FALSE,
+                   burnin = 10,
+                   random_init = TRUE,
+                   #always_in_loc = 'x4',
+                   nsim = 10000,
+                   seed = 123)
 summary(spsl)
+plot(spsl$spike$delta$location[, 4], type = "l")
+plot(spsl, "location", "inc")
+plot(spsl, "location", "post")
+plot(spsl, "location", "rand")
 barplot(colMeans(spsl$spike$delta$location))
 
 
