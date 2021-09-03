@@ -7,6 +7,7 @@
 #' @param prog_bar Show a progress bar?
 #' @param always_in_loc,always_in_scl Select the variables which are NOT subject to selection.
 #' @param coef_init Single value. If not NULL (default), the coefficients will be initialised with the given value.
+#' @param seed If not NULL (default), the given value will be used for \link{set.seed}.
 #' @inheritParams mcmc
 #' 
 #' @importFrom stats setNames

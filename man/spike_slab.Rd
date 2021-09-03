@@ -18,7 +18,11 @@ spike_slab(
   nsim = 1000,
   burnin = round(nsim * 0.2),
   stepsize = sqrt(3) * (m$df)^(-1/6),
-  prog_bar = TRUE
+  prog_bar = TRUE,
+  always_in_loc = NULL,
+  always_in_scl = NULL,
+  coef_init = NULL,
+  seed = NULL
 )
 }
 \arguments{
@@ -37,6 +41,12 @@ spike_slab(
 \item{stepsize}{The step size of the MMALA update.}
 
 \item{prog_bar}{Show a progress bar?}
+
+\item{always_in_loc, always_in_scl}{Select the variables which are NOT subject to selection.}
+
+\item{coef_init}{Single value. If not NULL (default), the coefficients will be initialised with the given value.}
+
+\item{seed}{If not NULL (default), the given value will be used for \link{set.seed}.}
 }
 \description{
 Title
