@@ -29,22 +29,22 @@ m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
 # test spike_slab -------------------------------------------
 
 spsl <- spike_slab(m,
-                   v_0 = 0.05,
+                   v_0 = 0.1,
                    a_theta_loc = 1,
                    b_theta_loc = 1,
                    a_theta_scl = 1,
                    b_theta_scl = 1,
                    a_tau_loc = 5,
-                   b_tau_loc = 50,
+                   b_tau_loc = 25,
                    a_tau_scl = 5,
-                   b_tau_scl = 50,
-                   burnin = 10,
+                   b_tau_scl = 25,
+                   burnin = 100,
                    coef_init = 0,
                    #always_in_loc = 'x4',
-                   nsim = 1000,
+                   nsim = 2000,
                    seed = 123, 
                    prog_bar = FALSE)
-# summary(spsl)
+summary(spsl)
 # plot(spsl$spike$delta$location[, 4], type = "l")
 # plot(spsl, "location", "inc")
 # plot(spsl, "location", "post")

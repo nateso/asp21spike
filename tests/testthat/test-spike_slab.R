@@ -5,46 +5,46 @@ set.seed(1509)
 n <- list(200,
           1000)
 
-bets <- list(matrix(c(rep(1,4), rep(2,4), rep(3,4), rep(0,4))),
+bets <- list(matrix(c(rep(3,4), rep(6,4), rep(9,4), rep(0,4))),
              matrix(c(rep(1,4), rep(0, 12))))
 
 gams <-list(matrix(c(rep(1,4), rep(2,4), rep(3,4), rep(0,4))),
             matrix(c(rep(1,4), rep(0, 12))))
 
-snr <- list(2, 5)
+snr <- list(5, 2)
 
 all_combis <- expand.grid(n, bets, gams, snr)
 names(all_combis) <- c("n", "bets", "gams", "snr")
 
 
-for(i in 1:length(all_combis)){
-  X <- matrix(NA,nrow = all_combis$n[[i]], ncol = 16)
+#for(i in 1:length(all_combis)){
+  X <- matrix(NA,nrow = all_combis$n[[1]], ncol = 16)
   for(jj in 1:16){
-    X[,jj] <- runif(n,-2,2)
+    X[,jj] <- runif(all_combis$n[[1]],-2,2)
   }
   
-  eta_b <- X %*% all_combis$bets[[i]]
-  eta_g <- X %*% all_combis$gams[[i]]
+  eta_b <- X %*% all_combis$bets[[1]]
+  eta_g <- X %*% all_combis$gams[[1]]
   
   eps <- rt(n, 5)
   
-  y <- rnorm(n, eta_b, exp(eta_g)) + (sd(eta_g)/all_combis$snr[[i]]) * eps
+  y <- rnorm(n, eta_b, exp(eta_g)) #+ (sd(eta_g)/all_combis$snr[[1]]) * eps
   
   test_data <- cbind.data.frame(y,X)
+  
   names(test_data) <- c("y",paste0("x",1:16))
   
   m <- lmls(y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
             scale = ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
             data = test_data,
             light = FALSE,maxit = 1000)
-  return(m)
-}
+#}
 
 
 # test spike_slab -------------------------------------------
 
 spsl <- spike_slab(m,
-                   v_0 = 0.05,
+                   v_0 = 0.1,
                    a_theta_loc = 1,
                    b_theta_loc = 1,
                    a_theta_scl = 1,
@@ -56,10 +56,11 @@ spsl <- spike_slab(m,
                    burnin = 10,
                    coef_init = 0,
                    #always_in_loc = 'x4',
-                   nsim = 1000,
+                   nsim = 2000,
                    seed = 123, 
                    prog_bar = FALSE)
-# summary(spsl)
+
+summary(spsl)
 # plot(spsl$spike$delta$location[, 4], type = "l")
 # plot(spsl, "location", "inc")
 # plot(spsl, "location", "post")
