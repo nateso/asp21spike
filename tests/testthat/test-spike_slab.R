@@ -1,30 +1,45 @@
 # simulate some data -----------------------------------------------
+
 set.seed(1509)
-n <- 100
 
-mu <- rep(1,5)
-sigma <- rep(1,length(mu))
+n <- list(200,
+          1000)
 
-X <- matrix(NA,nrow = n, ncol = length(mu))
-for(jj in 1:length(mu)){
-  X[,jj] <- rnorm(n,mu[jj],sigma[jj])
+bets <- list(matrix(c(rep(1,4), rep(2,4), rep(3,4), rep(0,4))),
+             matrix(c(rep(1,4), rep(0, 12))))
+
+gams <-list(matrix(c(rep(1,4), rep(2,4), rep(3,4), rep(0,4))),
+            matrix(c(rep(1,4), rep(0, 12))))
+
+snr <- list(2, 5)
+
+all_combis <- expand.grid(n, bets, gams, snr)
+names(all_combis) <- c("n", "bets", "gams", "snr")
+
+
+for(i in 1:length(all_combis)){
+  X <- matrix(NA,nrow = all_combis$n[[i]], ncol = 16)
+  for(jj in 1:16){
+    X[,jj] <- runif(n,-2,2)
+  }
+  
+  eta_b <- X %*% all_combis$bets[[i]]
+  eta_g <- X %*% all_combis$gams[[i]]
+  
+  eps <- rt(n, 5)
+  
+  y <- rnorm(n, eta_b, exp(eta_g)) + (sd(eta_g)/all_combis$snr[[i]]) * eps
+  
+  test_data <- cbind.data.frame(y,X)
+  names(test_data) <- c("y",paste0("x",1:16))
+  
+  m <- lmls(y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
+            scale = ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
+            data = test_data,
+            light = FALSE,maxit = 1000)
+  return(m)
 }
 
-bets <- matrix(c(2,6,3,0,0))
-gams <- matrix(c(2,6,3,0,0))
-
-y <- rnorm(n, X %*% bets, exp(-3 + X %*% gams))
-y_noise <- y + rnorm(n,0,1)
-
-y <- y_noise
-
-test_data <- cbind.data.frame(y,X)
-names(test_data) <- c("y",paste0("x",1:5))
-
-m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
-          scale = ~ x1 + x2 + x3 + x4 + x5,
-          data = test_data,
-          light = FALSE,maxit = 1000)
 
 # test spike_slab -------------------------------------------
 
