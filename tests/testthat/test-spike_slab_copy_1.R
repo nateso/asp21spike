@@ -41,15 +41,18 @@ spsl <- spike_slab(m,
                    burnin = 100,
                    coef_init = 0,
                    #always_in_loc = 'x4',
-                   nsim = 2000,
+                   nsim = 1000,
                    seed = 123, 
                    prog_bar = FALSE)
+
 summary(spsl)
-# plot(spsl$spike$delta$location[, 4], type = "l")
-# plot(spsl, "location", "inc")
-# plot(spsl, "location", "post")
-# plot(spsl, "location", "rand")
-# barplot(colMeans(spsl$spike$delta$location))
+plot(spsl$spike$delta$location[, 4], type = "l")
+plot(spsl, "location", "inc")
+plot(spsl, "location", "post")
+plot(spsl, "location", "rand")
+barplot(colMeans(spsl$spike$delta$location))
+
+plot(test_data$x1, test_data$y)
 
 
 # set.seed(243)
