@@ -2,44 +2,121 @@
 
 set.seed(1509)
 
-n <- list(200,
-          1000)
+n <- list(1000,
+          300)
 
-bets <- list(matrix(c(rep(3,4), rep(6,4), rep(9,4), rep(0,4))),
-             matrix(c(rep(1,4), rep(0, 12))))
+bets <- list(matrix(c(2,6,3,3,3,0,0,0,0,0,0)),
+             matrix(c(2,6,3,3,3,3,3,3,3,0,0)))
 
-gams <-list(matrix(c(rep(1,4), rep(2,4), rep(3,4), rep(0,4))),
-            matrix(c(rep(1,4), rep(0, 12))))
+gams <-list(matrix(c(2,6,3,3,3,0,0,0,0,0,0)),
+            matrix(c(2,6,3,3,3,3,3,3,3,0,0)))
 
-snr <- list(5, 2)
+snr <- list(10, 3)
 
 all_combis <- expand.grid(n, bets, gams, snr)
+all_combis <- all_combis[rep(1:nrow(all_combis), each = 200), ]
 names(all_combis) <- c("n", "bets", "gams", "snr")
 
+spsl <-m <- list()
 
-#for(i in 1:length(all_combis)){
-  X <- matrix(NA,nrow = all_combis$n[[1]], ncol = 16)
-  for(jj in 1:16){
-    X[,jj] <- runif(all_combis$n[[1]],-2,2)
+mu <- rep(1,11)
+sigma <- rep(1,length(mu))
+system.time({
+for(i in 1:30){
+  
+  X <- matrix(NA,nrow = all_combis$n[[i]], ncol = length(mu))
+  for(jj in 1:length(mu)){
+    X[,jj] <- 0.1 * rnorm(all_combis$n[[i]],mu[jj],sigma[jj])
   }
   
-  eta_b <- X %*% all_combis$bets[[1]]
-  eta_g <- X %*% all_combis$gams[[1]]
+  eta_b <- X %*% all_combis$bets[[i]]
+  eta_g <- X %*% all_combis$gams[[i]]
   
-  eps <- rt(n, 5)
+  eps <- rt(all_combis$n[[i]], 5)
   
-  y <- rnorm(n, eta_b, exp(eta_g)) #+ (sd(eta_g)/all_combis$snr[[1]]) * eps
-  
+  y <- rnorm(all_combis$n[[i]], eta_b, exp(eta_g)) + (sd(eta_g)/all_combis$snr[[i]]) * eps
+  summary(y)
   test_data <- cbind.data.frame(y,X)
+  names(test_data) <- c("y",paste0("x",1:11))
   
-  names(test_data) <- c("y",paste0("x",1:16))
+  m[[i]] <- try(lmls(y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11,
+                     scale = ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11,
+                     data = test_data,
+                     light = FALSE,maxit = 1000), silent = TRUE)
   
-  m <- lmls(y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
-            scale = ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x12 + x13 + x14 + x15 + x16,
-            data = test_data,
-            light = FALSE,maxit = 1000)
-#}
+  if(class(m[[i]]) == "lmls"){
+    spsl[[i]] <- spike_slab(m[[i]],
+                            v_0 = 0.1,
+                            a_theta_loc = 1,
+                            b_theta_loc = 1,
+                            a_theta_scl = 1,
+                            b_theta_scl = 1,
+                            a_tau_loc = 5,
+                            b_tau_loc = 25,
+                            a_tau_scl = 5,
+                            b_tau_scl = 25,
+                            burnin = 10,
+                            coef_init = 0,
+                            #always_in_loc = 'x4',
+                            nsim = 1000,
+                            prog_bar = FALSE)
+    
+    print("-----------------------------------------------------------------------------")
+    print(all_combis[i,])
+    summary(spsl[[i]])
+  } else {print("Fail")}
+}})
 
+
+# calculate misslcassification rate or accuracy:
+
+calc_acc <- function(mod,bets,gams){
+  sel <- names(mod$spike$coefs$location) %in% names(mod$spike$delta$location)
+  if("(Intercept)" %in% names(mod$spike$coefs$location)){
+    sel <- sel[-1]
+  }
+  bets_sel <- bets[sel]
+  sel <- names(mod$spike$coefs$scale) %in% names(mod$spike$delta$scale)
+  if("(Intercept)" %in% names(mod$spike$coefs$scale)){
+    sel <- sel[-1]
+  }
+  gams_sel <- gams[sel]
+  actual_loc <- ifelse(bets_sel != 0, T,F)
+  actual_scl <- ifelse(gams_sel != 0, T,F)
+  
+  TP <- sum(mod$spike$delta$location[,actual_loc]) + sum(mod$spike$delta$scale[,actual_scl])
+  TN <- sum(mod$spike$delta$location[,actual_loc == F] == 0) + sum(mod$spik$delta$scale[,actual_scl == F] == 0)
+  FN <- sum(mod$spike$delta$location[,actual_loc] == 0) + sum(mod$spike$delta$scale[,actual_scl] == 0)
+  FP <- sum(mod$spike$delta$location[,actual_loc == F]) + sum(mod$spike$delta$scale[,actual_scl == F])
+  
+  out <- matrix(c(TP,FP,FN,TN),nrow = 2, ncol = 2,
+                dimnames = list(c('actual_P','actual_N'),c('pred_P','pred_N')))
+  n <- (length(actual_loc) + length(actual_scl)) * nrow(mod$spike$delta$location)
+  out <- out / n
+  return(list(confusion = out,
+              accuracy = sum(diag(out)),
+              missclass = 1 - sum(diag(out))))
+}
+
+for(i in 1:30){
+  print(i)
+  print(calc_acc(spsl[[i]], all_combis$bets[[i]], all_combis$gams[[i]]))
+}
+
+
+
+
+
+
+
+View(all_combis)
+for (i in 1:16) {
+  summary()
+}
+
+
+all_combis
+plot(test_data$x9, test_data$y)
 
 # test spike_slab -------------------------------------------
 
@@ -56,12 +133,12 @@ spsl <- spike_slab(m,
                    burnin = 10,
                    coef_init = 0,
                    #always_in_loc = 'x4',
-                   nsim = 2000,
+                   nsim = 1000,
                    seed = 123, 
                    prog_bar = FALSE)
 
 summary(spsl)
-# plot(spsl$spike$delta$location[, 4], type = "l")
+plot(spsl$spike$delta$location[, 6], type = "l")
 # plot(spsl, "location", "inc")
 # plot(spsl, "location", "post")
 # plot(spsl, "location", "rand")
