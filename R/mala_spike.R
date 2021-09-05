@@ -88,11 +88,11 @@ score_gamma_spike <- function(m, curr_tau) {
 #' @importFrom stats fitted
 
 info_beta_spike <- function(m, curr_tau) {
-  crossprod(m$x / fitted(m, "scale")) + diag(c(1/curr_tau))
+  crossprod(m$x / fitted(m, "scale")) + diag(c(1/curr_tau), nrow = length(curr_tau))
 }
 
 info_gamma_spike<- function(m, curr_tau) {
-  2 * crossprod(m$z) + diag(c(1/curr_tau))
+  2 * crossprod(m$z) + diag(c(1/curr_tau), nrow = length(curr_tau))
 }
 
 # wrappers ------------------------------------------------------
