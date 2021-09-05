@@ -79,13 +79,14 @@ spike_slab <- function(m,
   # intitalise parameter objects
   coefs <- tau <- list(location = matrix(NA, nrow = M, ncol = ncol(m$x)),
                        scale = matrix(NA, nrow = M, ncol = ncol(m$z)))
-  
-  theta <- delta <- list(location = matrix(NA, nrow = M, ncol = n_select['location']),
-                         scale = matrix(NA, nrow = M, ncol = n_select['scale'])) # only for variables subject to selection
+  delta <- list(location = matrix(NA, nrow = M, ncol = n_select['location']),
+                scale = matrix(NA, nrow = M, ncol = n_select['scale'])) # only for variables subject to selection
+  theta <- list(location = matrix(NA, nrow = M, ncol = 1),
+                scale = matrix(NA, nrow = M, ncol = 1)) # only for variables subject to selection
   
   # initialise parameters
   for (k in 1:2){
-    theta[[k]][1, ] <- rbeta(n_select[k], hyper$a_theta[k], hyper$b_theta[k])
+    theta[[k]][1, ] <- rbeta(1, hyper$a_theta[k], hyper$b_theta[k])
     delta[[k]][1, ] <- rbinom(n_select[k], 1, theta[[k]][1, ])
     if(n_select[k] != 0){
       tau[[k]][1,which_select[[k]]] <- sapply(delta[[k]][1,],sample_tau,
@@ -124,32 +125,35 @@ spike_slab <- function(m,
 
       # first update hyper-variances for coefficients, which are not subject to selection
       if(length(n_always_in[k]) != 0){
-        tau[[kk]][mm,which_always_in[[kk]]] <- update_tau_nosel(beta = coefs[[kk]][mm,which_always_in[[kk]]],
-                                                                a_tau = hyper$a_tau[kk],
-                                                                b_tau = hyper$b_tau[kk])
+        tau[[kk]][mm, which_always_in[[kk]]] <- update_tau_nosel(beta = coefs[[kk]][mm - 1, which_always_in[[kk]]],
+                                                                 a_tau = hyper$a_tau[kk],
+                                                                 b_tau = hyper$b_tau[kk])
       }
+      
       # second, update parameters for all coefficients subject to selection
+      current_delta <- delta[[kk]][mm - 1, ]
+      ## update theta_lk
+      theta[[kk]][mm, ] <- update_theta(delta = current_delta,
+                                        a_theta = hyper$a_theta[kk],
+                                        b_theta = hyper$b_theta[kk])
+      
       for (ll in which_select[[kk]]){
         iter <- which(which_select[[kk]] == ll) # iter runs from 1 to ncol(delta), while ll iterates over all columns in tau and coef which are subject to selection
         
         # make sure that we are using the most recent deltas
-        current_delta <- delta[[kk]][mm, ]
-        current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
+        # current_delta <- delta[[kk]][mm, ]
+        # current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
         
         ## update tau_lk
         tau[[kk]][mm, ll] <- update_tau(a_tau = hyper$a_tau[kk], 
                                         b_tau = hyper$b_tau[kk], 
                                         v_0 = v_0, 
-                                        beta = coefs[[kk]][mm, ll], 
+                                        beta = coefs[[kk]][mm - 1, ll], 
                                         delta = current_delta[iter])
-        ## update theta_lk
-        theta[[kk]][mm, iter] <- update_theta(delta = current_delta,
-                                              a_theta = hyper$a_theta[kk],
-                                              b_theta = hyper$b_theta[kk])
         
         ## update delta_lk
-        delta[[kk]][mm, iter] <- update_delta(theta = theta[[kk]][mm, iter], 
-                                              tau = tau[[kk]][mm, ll], 
+        delta[[kk]][mm, iter] <- update_delta(theta = theta[[kk]][mm - 1, ], 
+                                              tau = tau[[kk]][mm - 1, ll], 
                                               a_tau = hyper$a_tau[kk], 
                                               b_tau = hyper$b_tau[kk], 
                                               v_0 = v_0)
@@ -180,7 +184,7 @@ spike_slab <- function(m,
     theta[[k]] <- as.data.frame(theta[[k]])
     
     names(tau[[k]]) <- names(coefs[[k]]) <- names(m$coefficients[[k]])
-    names(delta[[k]]) <- names(theta[[k]]) <- names(m$coefficients[[k]])[which_select[[k]]]
+    names(delta[[k]]) <- names(m$coefficients[[k]])[which_select[[k]]]
   }
   
   # add results to model
