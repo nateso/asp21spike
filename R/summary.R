@@ -72,5 +72,5 @@ summary.lmls_spike <- function(object, ...) {
   cat("\nScale:\n")
   prmatrix(res_scl, quote = FALSE)
   cat("\nIncl. prob.:  > 0.9: '***'  |  > 0.75: '**'  |  > 0.5: '*'\n")
-  cat("Not selected: '-'")
+  cat("Not selected: '-'\n")
 }
