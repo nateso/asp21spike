@@ -47,7 +47,7 @@ system.time({
       eps <- rt(all_combis$n[[i]], 5)
       
       y <- rnorm(all_combis$n[[i]], eta_b, exp(eta_g)) + (sd(eta_g)/all_combis$snr[[i]]) * eps
-      summary(y)
+      ## summary(y)
       test_data <- cbind.data.frame(y,X)
       names(test_data) <- c("y",paste0("x",1:11))
       
@@ -73,9 +73,9 @@ system.time({
                                 nsim = 1000,
                                 prog_bar = FALSE)
         
-        cat("-----------------------------------------------------------------------------\n")
-        print(all_combis[i,])
-        summary(spsl[[i]])
+        ## cat("-----------------------------------------------------------------------------\n")
+        ## print(all_combis[i,])
+        ## summary(spsl[[i]])
       } else {
         spsl[[i]] <- NULL
         print("Fail")
