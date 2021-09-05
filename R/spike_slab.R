@@ -118,11 +118,11 @@ spike_slab <- function(m,
       # Update coefficients
       param <- names(delta)[kk] # extract 'location' or 'scale'
       mod_tmp <- mmala_update_spike(curr_m = mod_tmp, 
-                              curr_tau = tau[[kk]][mm - 1, ],
-                              predictor = param, 
-                              stepsize = stepsize)
+                                    curr_tau = tau[[kk]][mm - 1, ],
+                                    predictor = param, 
+                                    stepsize = stepsize)
       coefs[[kk]][mm, ] <- coef(mod_tmp)[[param]]
-
+      
       # first update hyper-variances for coefficients, which are not subject to selection
       if(length(n_always_in[k]) != 0){
         tau[[kk]][mm, which_always_in[[kk]]] <- update_tau_nosel(beta = coefs[[kk]][mm - 1, which_always_in[[kk]]],
@@ -131,33 +131,26 @@ spike_slab <- function(m,
       }
       
       # second, update parameters for all coefficients subject to selection
-      current_delta <- delta[[kk]][mm - 1, ]
+     
+      ## update tau_lk
+      tau[[kk]][mm, which_select[[kk]]] <- update_tau(a_tau = hyper$a_tau[kk], 
+                                                      b_tau = hyper$b_tau[kk], 
+                                                      v_0 = v_0, 
+                                                      beta = coefs[[kk]][mm - 1, which_select[[kk]]], 
+                                                      delta = delta[[kk]][mm - 1, ])
+      
+      ## update delta_lk
+      delta[[kk]][mm, ] <- update_delta(theta = theta[[kk]][mm - 1, ], 
+                                        tau = tau[[kk]][mm - 1, which_select[[kk]]], 
+                                        a_tau = hyper$a_tau[kk], 
+                                        b_tau = hyper$b_tau[kk], 
+                                        v_0 = v_0)
+      
       ## update theta_lk
-      theta[[kk]][mm, ] <- update_theta(delta = current_delta,
+      theta[[kk]][mm, ] <- update_theta(delta = delta[[kk]][mm - 1, ],
                                         a_theta = hyper$a_theta[kk],
                                         b_theta = hyper$b_theta[kk])
-      
-      for (ll in which_select[[kk]]){
-        iter <- which(which_select[[kk]] == ll) # iter runs from 1 to ncol(delta), while ll iterates over all columns in tau and coef which are subject to selection
-        
-        # make sure that we are using the most recent deltas
-        # current_delta <- delta[[kk]][mm, ]
-        # current_delta[is.na(current_delta)] <- delta[[kk]][mm - 1, is.na(current_delta)]
-        
-        ## update tau_lk
-        tau[[kk]][mm, ll] <- update_tau(a_tau = hyper$a_tau[kk], 
-                                        b_tau = hyper$b_tau[kk], 
-                                        v_0 = v_0, 
-                                        beta = coefs[[kk]][mm - 1, ll], 
-                                        delta = current_delta[iter])
-        
-        ## update delta_lk
-        delta[[kk]][mm, iter] <- update_delta(theta = theta[[kk]][mm - 1, ], 
-                                              tau = tau[[kk]][mm - 1, ll], 
-                                              a_tau = hyper$a_tau[kk], 
-                                              b_tau = hyper$b_tau[kk], 
-                                              v_0 = v_0)
-      }
+      #}
     }
     if(prog_bar) {
       setTxtProgressBar(pb, mm)
