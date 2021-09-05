@@ -21,6 +21,7 @@ spsl <-m <- list()
 
 mu <- rep(1,11)
 sigma <- rep(1,length(mu))
+
 system.time({
 for(i in 1:30){
   
