@@ -24,6 +24,8 @@ names(all_combis) <- c("n", "bets", "gams", "snr")
 mu <- rep(1,11)
 sigma <- rep(1,length(mu))
 
+spsl <- m <- list()
+
 data_cuts <- round(seq(0, nrow(all_combis), length.out = 6))
 
 save(all_combis, mu, sigma, data_cuts,
@@ -34,7 +36,6 @@ system.time({
   for(j in 2:length(data_cuts)){
     i_values <- seq((data_cuts[(j - 1)] + 1),
                     data_cuts[j])
-    spsl <- m <- list()
     for(i in i_values){
       X <- matrix(NA,nrow = all_combis$n[[i]], ncol = length(mu))
       for(jj in 1:length(mu)){
@@ -87,7 +88,9 @@ system.time({
   }
 })
 close(pb)
-
+#     user   system  elapsed 
+# 7679.278  166.338 7856.092 
+# ca. 2h 10m
 
 # calculate misslcassification rate or accuracy:
 
