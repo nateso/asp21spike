@@ -1,12 +1,16 @@
 #' Variable Selection using Spike and Slab Priors
-#' Main function provoding acces to spike and slab priors
+#' 
+#' \code{spike_slab} provides acces to spike and slab priors.
+#' 
+#' The choice of our hyperparameters was made based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
+#' Modifications are merely recommended under considerations of literature.
 #'
-#' @param a_theta_loc,b_theta_loc,a_tau_loc,b_tau_loc Hyperparameters for the location (see details). 
-#' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale (see details).
+#' @param a_theta_loc,b_theta_loc,a_tau_loc,b_tau_loc Hyperparameters for the location. See 'Details'. 
+#' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale. See 'Details'.
 #' @param v_0 Factor for the spike component.
-#' @param burnin Number of samples used as burn in phase, will be set to zero if negative.
-#' @param prog_bar Show a progress bar?
-#' @param always_in_loc,always_in_scl Select the variables which are NOT subject to selection.
+#' @param burnin Number of samples used as burn in phase. Value will be set to zero if negative.
+#' @param prog_bar Logical value indicating whether to show a progress bar.
+#' @param always_in_loc,always_in_scl String of variables which are not subject to selection.
 #' @param coef_init Single value. If not NULL (default), the coefficients will be initialised with the given value.
 #' @param seed If not NULL (default), the given value will be used for \link{set.seed}.
 #' @inheritParams mcmc

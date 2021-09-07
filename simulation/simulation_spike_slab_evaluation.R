@@ -1,7 +1,7 @@
 # Set the current working directory (to save the results later)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 devtools::load_all()
-
+getwd()
 ## Calculating accuracy ========================================================
 
 calc_acc <- function(mod,bets,gams){

@@ -1,11 +1,9 @@
 
 #' Plot Method for lmls_spike object
-#' This is some description
 #' 
 #' @param x Object of class spike_lmls
 #' @param parameter Takes a string which coefficients should be plotted, 'location' (default) or 'scale', can be abbreviated.
 #' @param plot_type Can be one of 'inclusion' (default), 'posterior' or 'random walk', can be abbreviated.
-#' @param ... Currently not used
 #' 
 #' @importFrom graphics abline barplot par hist lines axis
 #' @importFrom stats density sd

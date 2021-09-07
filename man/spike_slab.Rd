@@ -2,7 +2,7 @@
 % Please edit documentation in R/spike_slab.R
 \name{spike_slab}
 \alias{spike_slab}
-\title{Title}
+\title{Variable Selection using Spike and Slab Priors}
 \usage{
 spike_slab(
   m,
@@ -28,26 +28,30 @@ spike_slab(
 \arguments{
 \item{m}{A location-scale regression model from the \code{\link[=lmls]{lmls()}} function.}
 
-\item{a_theta_loc, b_theta_loc, a_tau_loc, b_tau_loc}{Hyperparameters for the location (see details).}
+\item{a_theta_loc, b_theta_loc, a_tau_loc, b_tau_loc}{Hyperparameters for the location. See 'Details'.}
 
-\item{a_theta_scl, b_theta_scl, a_tau_scl, b_tau_scl}{Hyperparameters for the scale (see details).}
+\item{a_theta_scl, b_theta_scl, a_tau_scl, b_tau_scl}{Hyperparameters for the scale. See 'Details'.}
 
 \item{v_0}{Factor for the spike component.}
 
 \item{nsim}{The number of MCMC samples to draw.}
 
-\item{burnin}{Number of samples used as burn in phase, will be set to zero if negative.}
+\item{burnin}{Number of samples used as burn in phase. Value will be set to zero if negative.}
 
 \item{stepsize}{The step size of the MMALA update.}
 
-\item{prog_bar}{Show a progress bar?}
+\item{prog_bar}{Logical value indicating whether to show a progress bar.}
 
-\item{always_in_loc, always_in_scl}{Select the variables which are NOT subject to selection.}
+\item{always_in_loc, always_in_scl}{String of variables which are not subject to selection.}
 
 \item{coef_init}{Single value. If not NULL (default), the coefficients will be initialised with the given value.}
 
 \item{seed}{If not NULL (default), the given value will be used for \link{set.seed}.}
 }
 \description{
-Title
+\code{spike_slab} provides acces to spike and slab priors.
+}
+\details{
+The choice of our hyperparameters was made based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
+Modifications are merely recommended under considerations of literature.
 }
