@@ -12,6 +12,8 @@
 \item{parameter}{Takes a string which coefficients should be plotted, 'location' (default) or 'scale', can be abbreviated.}
 
 \item{plot_type}{Can be one of 'inclusion' (default), 'posterior' or 'random walk', can be abbreviated.}
+
+\item{...}{Currently not in use}
 }
 \description{
 Plot Method for lmls_spike object

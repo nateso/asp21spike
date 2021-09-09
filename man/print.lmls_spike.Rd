@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{x}{Object of class 'lmls_spike'}
+
+\item{...}{Currently not in use}
 }
 \description{
 Print method for class 'lmls_spike'

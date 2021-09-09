@@ -1,6 +1,7 @@
 #' Summary for spike and slab priors
 #' 
 #' @param object Object of class lmls_spike
+#' @param ... Currently not in use
 #' 
 #' @method summary lmls_spike
 #' 

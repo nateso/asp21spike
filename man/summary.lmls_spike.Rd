@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{Object of class lmls_spike}
+
+\item{...}{Currently not in use}
 }
 \description{
 Summary for spike and slab priors
