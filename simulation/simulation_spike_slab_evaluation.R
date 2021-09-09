@@ -39,8 +39,8 @@ calc_acc <- function(mod,bets,gams){
 
 ## Data ========================================================================
 
-load("simulation_study/sim_data.RData")
-load("simulation_study/sim_results.RData")
+load("../../simulation_study/sim_data.RData")
+load("../../simulation_study/sim_results.RData")
 
 
 ## Evaluation ==================================================================

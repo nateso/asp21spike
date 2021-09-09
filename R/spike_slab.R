@@ -3,7 +3,6 @@
 #' \code{spike_slab} provides acces to spike and slab priors.
 #' 
 #' The choice of our hyperparameters was made based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
-#' Modifications are merely recommended under considerations of literature.
 #'
 #' @param a_theta_loc,b_theta_loc,a_tau_loc,b_tau_loc Hyperparameters for the location. See 'Details'. 
 #' @param a_theta_scl,b_theta_scl,a_tau_scl,b_tau_scl Hyperparameters for the scale. See 'Details'.
@@ -15,6 +14,9 @@
 #' @param seed If not NULL (default), the given value will be used for \link{set.seed}.
 #' @inheritParams mcmc
 #' 
+#' @references Scheipl, F. (2011): "spikeSlabGAM: Bayesian variable selection, model choice and regularization for generalized additive mixed models in R"
+#' @references Fahrmeir, L. et al. (2013): "Regression: Models, Methods and Applications"
+#'
 #' @importFrom stats setNames
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #'
