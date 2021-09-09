@@ -13,7 +13,11 @@
 
 \item{plot_type}{Can be one of 'inclusion' (default), 'posterior' or 'random walk', can be abbreviated.}
 
+<<<<<<< HEAD
 \item{...}{Currently not in use}
+=======
+\item{...}{Currently not used.}
+>>>>>>> c56ffa29256e53977acb064869dcddcc1c292490
 }
 \description{
 Plot Method for lmls_spike object

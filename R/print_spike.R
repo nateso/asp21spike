@@ -1,7 +1,7 @@
 #' Print method for class 'lmls_spike'
 #' 
 #' @param x Object of class 'lmls_spike'
-#' @param ... Currently not in use
+#' @param ... Currently not used.
 #' 
 #' @method print lmls_spike
 #' 
