@@ -12,7 +12,8 @@ n <- list(1000,
 bets <- list(matrix(c(2,6,3,3,3,0,0,0,0,0,0)),
              matrix(c(2,6,3,3,3,3,3,3,3,0,0)))
 
-gams <-list(matrix(c(2,6,3,3,3,0,0,0,0,0,0)),
+gams <-list(matrix(c(0,0,0,0,0,0,0,0,0,0,0)),
+            matrix(c(2,6,3,3,3,0,0,0,0,0,0)),
             matrix(c(2,6,3,3,3,3,3,3,3,0,0)))
 
 snr <- list(10, 3)
@@ -21,7 +22,7 @@ all_combis <- expand.grid(n, bets, gams, snr)
 all_combis <- all_combis[rep(1:nrow(all_combis), each = 200), ]
 names(all_combis) <- c("n", "bets", "gams", "snr")
 
-mu <- rep(1,11)
+mu <- rep(0,11)
 sigma <- rep(1,length(mu))
 
 spsl <- m <- list()
@@ -29,7 +30,7 @@ spsl <- m <- list()
 data_cuts <- round(seq(0, nrow(all_combis), length.out = 6))
 
 save(all_combis, mu, sigma, data_cuts,
-     file = "sim_data.RData")
+     file = "../../simulation_study/sim_data.RData")
 
 pb <- txtProgressBar(0, nrow(all_combis), style = 3)
 system.time({
@@ -45,9 +46,9 @@ system.time({
       eta_b <- X %*% all_combis$bets[[i]]
       eta_g <- X %*% all_combis$gams[[i]]
       
-      eps <- rt(all_combis$n[[i]], 5)
+      eps <- rnorm(all_combis$n[[i]])
       
-      y <- rnorm(all_combis$n[[i]], eta_b, exp(eta_g)) + (sd(eta_g)/all_combis$snr[[i]]) * eps
+      y <- rnorm(all_combis$n[[i]], eta_b, exp(eta_g)) + (sd(eta_b)/all_combis$snr[[i]]) * eps
       ## summary(y)
       test_data <- cbind.data.frame(y,X)
       names(test_data) <- c("y",paste0("x",1:11))
@@ -84,7 +85,7 @@ system.time({
       setTxtProgressBar(pb, i)
     }
     save(m, spsl,
-         file = paste0("sim_results_", j - 1, ".RData"))
+         file = paste0("../../simulation_study/sim_results_", j - 1, ".RData"))
   }
 })
 close(pb)
