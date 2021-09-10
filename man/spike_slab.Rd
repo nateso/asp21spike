@@ -53,5 +53,9 @@ spike_slab(
 }
 \details{
 The choice of our hyperparameters was made based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
-Modifications are merely recommended under considerations of literature.
+}
+\references{
+Scheipl, F. (2011): "spikeSlabGAM: Bayesian variable selection, model choice and regularization for generalized additive mixed models in R"
+
+Fahrmeir, L. et al. (2013): "Regression: Models, Methods and Applications"
 }

@@ -9,11 +9,7 @@
 \arguments{
 \item{object}{Object of class lmls_spike}
 
-<<<<<<< HEAD
-\item{...}{Currently not in use}
-=======
 \item{...}{Currently not used.}
->>>>>>> c56ffa29256e53977acb064869dcddcc1c292490
 }
 \description{
 Summary for spike and slab priors
