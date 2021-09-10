@@ -49,6 +49,7 @@ calc_acc <- function(mod,bets,gams){
 load("../../simulation_study/sim_data.RData")
 load("../../simulation_study/sim_results.RData")
 
+gc()
 
 ## Evaluation ==================================================================
 
@@ -78,12 +79,18 @@ bets_spars <- sapply(all_combis$bets,
                        ifelse(all(x == all_combis$bets[[1]]), 
                               "high", "low")
                      })
+bets_spars <- factor(bets_spars, levels = c("high", "low"))
 
 gams_spars <- sapply(all_combis$gams, 
                      function(x){
-                       ifelse(all(x == all_combis$gams[[1]]), 
-                              "high", "low")
+                       ifelse(sum(x == 0) < 11, 
+                              ifelse(sum(x == 0) < 6,
+                                     "low",
+                                     "high"), 
+                              "max")
                      })
+gams_spars <- factor(gams_spars, levels = c("max", "high", "low"))
+
 
 boxplot(eval$accuracy ~ unlist(all_combis$snr) + unlist(all_combis$n))
 boxplot(eval$error_loc ~ unlist(all_combis$snr) + unlist(all_combis$n))
@@ -107,17 +114,142 @@ plot_data <- data.frame(eval,
                         "gams_spars" = gams_spars)
 str(plot_data)
 
-plot_data$all_x     <- factor(apply(plot_data[, -1:-3], 1, paste0, collapse = " - "))
-plot_data$snr_n     <- factor(apply(plot_data[, c("snr", "n")], 1, paste0, collapse = " - "))
-plot_data$bets_gams <- factor(apply(plot_data[, c("bets_spars", "gams_spars")], 1, paste0, collapse = " - "))
+all_x_levels <- apply(expand.grid(levels(gams_spars),
+                                  levels(bets_spars),
+                                  "n"   = sort(unique(plot_data$n)),
+                                  "snr" = sort(unique(plot_data$snr)))[, 4:1],
+                      1, paste0, collapse = " - ")
+plot_data$all_x     <- factor(apply(plot_data[, -1:-3], 1, paste0, collapse = " - "), levels = all_x_levels)
+plot_data$snr_n     <- factor(apply(plot_data[, c("snr", "n")], 1, paste0, collapse = " - "),
+                              levels = c("3 - 300", "3 - 1000", "10 - 300", "10 - 1000"))
+plot_data$bets_gams <- factor(apply(plot_data[, c("bets_spars", "gams_spars")], 1, paste0, collapse = " - "),
+                              levels = paste0(rep(levels(bets_spars), each = length(levels(gams_spars))), " - ",
+                                              rep(levels(gams_spars), length(levels(bets_spars)))))
 
-ggplot(plot_data, 
-       aes(y = accuracy, x = all_x)) +
+plot_data_long <- data.frame("value" = c(plot_data[, 1], plot_data[, 2], plot_data[, 3]),
+                             "what" = rep(c("Accuracy", "Error Location", "Error Scale"), each = nrow(plot_data)),
+                             plot_data[rep(1:nrow(plot_data), 3), -1:-3])
+str(plot_data_long)
+
+col_n <- ifelse(length(unique(plot_data_long$all_x)) > 6, 4, 2)
+col <- rep(letters[seq(1, length(unique(plot_data_long$all_x)) / col_n)], col_n)
+plot_data_long$col <- col[as.numeric(plot_data_long$all_x)]
+
+ggplot(plot_data_long,
+              aes(all_x, value, fill = col)) +
   geom_violin(na.rm = TRUE, 
-              draw_quantiles = 0.5, 
+              draw_quantiles = 1:3 * 0.25, 
               scale = "width") +
-  geom_boxplot(na.rm = TRUE,
-               width = 0.2)
+  # theme_classic() +
+  theme(axis.text.x = element_text(angle = cust_angle, 
+                                   vjust = ifelse(cust_angle == 0, 0.5, 1), 
+                                   hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        legend.position = "none") +
+  xlab("SNR - n - sparsity Beta - sparsity Gamma") +
+  ylab("") + 
+  geom_vline(xintercept = 1:3 * 0.25 * length(unique(x)) + 0.5,
+             linetype = "longdash") + 
+  facet_grid(rows = vars(what),
+             scales = "free_y")
+
+
+# default_plot <- function(data, x, y, x_lab, y_lab, cust_angle = 0, facet_rows = NULL){
+#   # get_rect <- data.frame("xstart" = seq(0.5, length(levels(x)) - 0.5),
+#   #                        "xend" = seq(1.5, length(levels(x)) + 0.5),
+#   #                        "cols" = c("#33333333", "#00000000"),
+#   #                        stringsAsFactors = FALSE)
+#   # str(get_rect)
+#   # str(get_rect)
+#   col_n <- ifelse(length(unique(x)) > 6, 4, 2)
+#   col <- rep(letters[seq(1, length(unique(x)) / col_n)], col_n)
+#   data$col <- col[as.numeric(x)]
+#   p <- ggplot(data, aes(x, y, fill = col)) +
+#     geom_violin(na.rm = TRUE, 
+#                 draw_quantiles = 1:3 * 0.25, 
+#                 scale = "width") +
+#     theme_classic() +
+#     theme(axis.text.x = element_text(angle = cust_angle, 
+#                                      vjust = ifelse(cust_angle == 0, 0.5, 1), 
+#                                      hjust = ifelse(cust_angle == 0, 0.5, 1)),
+#           legend.position = "none") +
+#     xlab(x_lab) +
+#     ylab(y_lab) + 
+#     geom_vline(xintercept = 0.5 * (length(unique(x)) + 1),
+#                linetype = "longdash")
+#   if(length(unique(x)) > 6){
+#     p <- p + geom_vline(xintercept = c(0.25, 0.75) * (length(unique(x))) + 0.5,
+#                         linetype = "longdash")
+#   }
+#   if(y_lab == "Accuracy"){ 
+#     p <- p + ylim(c(min(y), 1))
+#   }
+#   if(!is.null(facet_rows)){
+#     p <- p + facet_grid(rows = vars(facet_rows),
+#                         scales = "free_y")
+#   }
+#   p
+# }
+
+pdf("../../simulation_study/violin_plots_all.pdf",
+    width = 8,
+    height = 8)
+cust_angle <- 60
+ggplot(plot_data_long,
+       aes(all_x, value, fill = col)) +
+  geom_violin(na.rm = TRUE, 
+              draw_quantiles = 1:3 * 0.25, 
+              scale = "width") +
+  # theme_classic() +
+  theme(axis.text.x = element_text(angle = cust_angle, 
+                                   vjust = ifelse(cust_angle == 0, 0.5, 1), 
+                                   hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        legend.position = "none") +
+  xlab("SNR - n - sparsity Beta - sparsity Gamma") +
+  ylab("") + 
+  geom_vline(xintercept = 1:3 * 0.25 * length(unique(plot_data_long$all_x)) + 0.5,
+             linetype = "longdash") + 
+  facet_grid(rows = vars(what),
+             scales = "free_y")
+dev.off()
+
+pdf("../../simulation_study/violin_plots_sep.pdf",
+    width = 4,
+    height = 8)
+cust_angle <- 30
+ggplot(plot_data_long,
+       aes(snr_n, value, fill = snr_n)) +
+  geom_violin(na.rm = TRUE, 
+              draw_quantiles = 1:3 * 0.25, 
+              scale = "width") +
+  # theme_classic() +
+  theme(axis.text.x = element_text(angle = cust_angle, 
+                                   vjust = ifelse(cust_angle == 0, 0.5, 1), 
+                                   hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        legend.position = "none") +
+  xlab("SNR - n") +
+  ylab("") + 
+  geom_vline(xintercept = 0.5 * length(unique(plot_data_long$snr_n)) + 0.5,
+             linetype = "longdash") + 
+  facet_grid(rows = vars(what),
+             scales = "free_y")
+## Sparsity -------------------------------------------------------------------
+ggplot(plot_data_long,
+       aes(bets_gams, value, fill = bets_gams)) +
+  geom_violin(na.rm = TRUE, 
+              draw_quantiles = 1:3 * 0.25, 
+              scale = "width") +
+  # theme_classic() +
+  theme(axis.text.x = element_text(angle = cust_angle, 
+                                   vjust = ifelse(cust_angle == 0, 0.5, 1), 
+                                   hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        legend.position = "none") +
+  xlab("sparsity Beta - sparsity Gamma") +
+  ylab("") + 
+  geom_vline(xintercept = 1:3 * 0.25 * length(unique(plot_data_long$bets_gams)) + 0.5,
+             linetype = "longdash") + 
+  facet_grid(rows = vars(what),
+             scales = "free_y")
+dev.off()
 
 plot_data[which.max(plot_data$accuracy), ]
 plot_data[which.min(plot_data$error_loc), ]
