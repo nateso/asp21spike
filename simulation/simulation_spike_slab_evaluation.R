@@ -27,7 +27,7 @@ calc_acc <- function(mod,bets,gams){
              0
            })
   TN <- (sum(mod$spike$delta$location[,actual_loc == F] == 0) +
-         sum(mod$spik$delta$scale[,actual_scl == F] == 0))
+         sum(mod$spike$delta$scale[,actual_scl == F] == 0))
   FN <- (sum(mod$spike$delta$location[,actual_loc] == 0) +
          sum(mod$spike$delta$scale[,actual_scl] == 0))
   FP <- (sum(mod$spike$delta$location[,actual_loc == F]) +
@@ -135,22 +135,22 @@ col_n <- ifelse(length(unique(plot_data_long$all_x)) > 6, 4, 2)
 col <- rep(letters[seq(1, length(unique(plot_data_long$all_x)) / col_n)], col_n)
 plot_data_long$col <- col[as.numeric(plot_data_long$all_x)]
 
-ggplot(plot_data_long,
-              aes(all_x, value, fill = col)) +
-  geom_violin(na.rm = TRUE, 
-              draw_quantiles = 1:3 * 0.25, 
-              scale = "width") +
-  # theme_classic() +
-  theme(axis.text.x = element_text(angle = cust_angle, 
-                                   vjust = ifelse(cust_angle == 0, 0.5, 1), 
-                                   hjust = ifelse(cust_angle == 0, 0.5, 1)),
-        legend.position = "none") +
-  xlab("SNR - n - sparsity Beta - sparsity Gamma") +
-  ylab("") + 
-  geom_vline(xintercept = 1:3 * 0.25 * length(unique(x)) + 0.5,
-             linetype = "longdash") + 
-  facet_grid(rows = vars(what),
-             scales = "free_y")
+# ggplot(plot_data_long,
+#               aes(all_x, value, fill = col)) +
+#   geom_violin(na.rm = TRUE, 
+#               draw_quantiles = 1:3 * 0.25, 
+#               scale = "width") +
+#   # theme_classic() +
+#   theme(axis.text.x = element_text(angle = cust_angle, 
+#                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
+#                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
+#         axis.title.x = element_blank(),
+#         axis.title.y = element_blank(),
+#         legend.position = "none") +
+#   geom_vline(xintercept = 1:3 * 0.25 * length(unique(x)) + 0.5,
+#              linetype = "longdash") + 
+#   facet_grid(rows = vars(what),
+#              scales = "free_y")
 
 
 # default_plot <- function(data, x, y, x_lab, y_lab, cust_angle = 0, facet_rows = NULL){
@@ -203,8 +203,8 @@ ggplot(plot_data_long,
   theme(axis.text.x = element_text(angle = cust_angle, 
                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        axis.title.x = element_blank(),
         legend.position = "none") +
-  xlab("SNR - n - sparsity Beta - sparsity Gamma") +
   ylab("") + 
   geom_vline(xintercept = 1:3 * 0.25 * length(unique(plot_data_long$all_x)) + 0.5,
              linetype = "longdash") + 
@@ -225,8 +225,8 @@ ggplot(plot_data_long,
   theme(axis.text.x = element_text(angle = cust_angle, 
                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        axis.title.x = element_blank(),
         legend.position = "none") +
-  xlab("SNR - n") +
   ylab("") + 
   geom_vline(xintercept = 0.5 * length(unique(plot_data_long$snr_n)) + 0.5,
              linetype = "longdash") + 
@@ -242,10 +242,10 @@ ggplot(plot_data_long,
   theme(axis.text.x = element_text(angle = cust_angle, 
                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
+        axis.title.x = element_blank(),
         legend.position = "none") +
-  xlab("sparsity Beta - sparsity Gamma") +
   ylab("") + 
-  geom_vline(xintercept = 1:3 * 0.25 * length(unique(plot_data_long$bets_gams)) + 0.5,
+  geom_vline(xintercept = 0.5 * length(unique(plot_data_long$bets_gams)) + 0.5,
              linetype = "longdash") + 
   facet_grid(rows = vars(what),
              scales = "free_y")
@@ -261,4 +261,199 @@ all_combis
 plot(test_data$x9, test_data$y)
 
 
+### ===========================================================================
+### Evaluate for coefficients =================================================
+
+calc_acc_coef <- function(mod, bets, gams, coef_val, coef_which, what){
+  sel <- names(mod$spike$coefs$location) %in% names(mod$spike$delta$location)
+  if("(Intercept)" %in% names(mod$spike$coefs$location)){
+    sel <- sel[-1]
+  }
+  bets_sel <- bets[sel]
+  sel <- names(mod$spike$coefs$scale) %in% names(mod$spike$delta$scale)
+  if("(Intercept)" %in% names(mod$spike$coefs$scale)){
+    sel <- sel[-1]
+  }
+  gams_sel <- gams[sel]
+  actual_loc <- bets_sel == coef_val
+  actual_scl <- gams_sel == coef_val
+  ## Accuracy -----------------------------------------------------------------
+  if(what == "Accuracy"){
+    if(coef_which == "Location"){
+      if(coef_val == 0){
+        delta <- 1 - mod$spike$delta$location
+      } else {
+        delta <- mod$spike$delta$location
+      }
+      TP <- sum(delta[, actual_loc])
+      n <- ((sum(actual_loc)) *
+              nrow(mod$spike$delta$location))
+    } else if (coef_which == "Scale"){
+      if(coef_val == 0){
+        delta <- 1 - mod$spike$delta$scale
+      } else {
+        delta <- mod$spike$delta$scale
+      }
+      TP <- sum(delta[, actual_scl])
+      n <- (sum(actual_scl) *
+              nrow(mod$spike$delta$scale))
+    }
+    out <- TP / n
+  } else if(what == "Error"){
+    if(coef_which == "Location"){
+      actual_coef <- c(FALSE, actual_loc)
+    } else {
+      actual_coef <- c(FALSE, actual_scl)
+    }
+    coefs <- apply(as.matrix(mod$spike$coefs[[tolower(coef_which)]][, actual_coef]),
+                   2, mean)
+    out <- sqrt(mean((coefs - coef_val)^2))
+  }
+  return(out)
+}
+
+spsl_sel <- (1:length(spsl))[sapply(spsl, function(x){class(x) == "lmls_spike"})]
+eval_coef <- data.frame("coef" = rep(c(0, 2, 3, 6), 2 * 2),
+                        "param" = rep(c("Location", "Scale"), each = 4 * 2),
+                        "value" = NA,
+                        "what" = rep(c("Accuracy", "Error"), each = 4),
+                        stringsAsFactors = FALSE)
+eval_coef <- eval_coef[rep(1:nrow(eval_coef), each = length(spsl_sel)), ]
+eval_coef$spsl_sel <- spsl_sel
+
+pb <- txtProgressBar(0, nrow(eval_coef), style = 3)
+for(i in 1:nrow(eval_coef)){
+  check <- any(all_combis[[ifelse(eval_coef$param[i] == "Location",
+                                  "bets", "gams")]][[eval_coef$spsl_sel[i]]] %in% eval_coef$coef[i])
+  if(check){
+    eval_coef$value[i] <- calc_acc_coef(spsl[[eval_coef$spsl_sel[i]]], 
+                                        all_combis$bets[[eval_coef$spsl_sel[i]]],
+                                        all_combis$gams[[eval_coef$spsl_sel[i]]],
+                                        coef_val = eval_coef$coef[i],
+                                        coef_which = eval_coef$param[i], 
+                                        what = eval_coef$what[i])
+  }
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+
+aggregate(eval_coef$value,
+          by = as.list(eval_coef[, c(-3, -5)]), 
+          FUN = mean, na.rm = TRUE)
+summary(eval_coef)
+
+eval_coef$coef  <- factor(eval_coef$coef, levels = c(0, 2, 3, 6))
+eval_coef$param <- as.factor(eval_coef$param)
+eval_coef$what  <- as.factor(eval_coef$what)
+
+pdf("../../simulation_study/violin_plots_coef.pdf",
+    width = 8,
+    height = 5)
+ggplot(eval_coef,
+       aes(coef, value, fill = coef)) +
+  geom_violin(na.rm = TRUE, 
+              scale = "width",
+              draw_quantiles = 1:3 * 0.25) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") +
+  facet_grid(rows = vars(what),
+             cols = vars(param),
+             scales = "free_y")
+dev.off()
+
+
+### ===========================================================================
+### spikeSlabGAM comparison ===================================================
+
+# Selecting results with worst accuracy
+sel_worst <- (all_combis$snr == 3 &
+                all_combis$n == 300 &
+                bets_spars == "high" &
+                gams_spars == "high")
+# ... with best accuracy
+sel_best  <-  (all_combis$snr == 10 &
+               all_combis$n == 1000 &
+               bets_spars == "low" &
+               gams_spars == "low")
+# ... with homoskedastic variance, for a fair comparison
+sel_fair  <- (all_combis$snr == 10 &
+                all_combis$n == 1000 &
+                bets_spars == "low" &
+                gams_spars == "max")
+wb <- NA
+wb[sel_worst] <- "worst"
+wb[sel_best]  <- "best"
+wb[sel_fair]  <- "fair"
+wb <- factor(wb, levels = c("worst", "best", "fair"))
+
+combis_ssg <- all_combis[sel_worst | sel_best | sel_fair, ]
+combis_ssg$wb <- wb[sel_worst | sel_best | sel_fair]
+combis_ssg$row <- (1:nrow(all_combis))[sel_best | sel_worst | sel_fair]
+
+eval_ssg <- data.frame("row" = combis_ssg$row,
+                       "accuracy" = NA)
+
+unique(combis_ssg[, -6])
+
+library(spikeSlabGAM)
+
+set.seed(1509)
+options(mc.cores = 4)
+
+mod_ssg <- list()
+
+pb <- txtProgressBar(0, nrow(combis_ssg), style = 3)
+for(i in 1:nrow(combis_ssg)){
+  mod_spsl <- spsl[[combis_ssg[i, ]$row]]
+  if(class(mod_spsl) == "lmls_spike"){
+    data_ssg <- data.frame("y" = mod_spsl$y,
+                           mod_spsl$x[, -1])
+    (system.time({
+      sink("/dev/null")
+      mod_ssg[[i]] <- spikeSlabGAM(y ~ lin(x1) + lin(x2) + lin(x3) + lin(x4) + lin(x5) + 
+                                     lin(x6) + lin(x7) + lin(x8) + lin(x9) + lin(x10) + lin(x11),
+                                   data = data_ssg)
+      sink(NULL)
+    }))
+    sum_ssh <- summary(mod_ssg[[i]])
+    ip <- sum_ssh$trmSummary
+    ip <- ip[grep("lin", rownames(ip)), 1]
+    true_coef <- c(combis_ssg$bets[[i]]) != 0
+    eval_ssg$accuracy[i] <- mean(c(ip[true_coef], 1 - ip[!true_coef]))
+  }
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+
+boxplot(eval_ssg$accuracy ~ combis_ssg$wb)
+
+plot_data_ssg <- data.frame(combis_ssg, 
+                            "accuracy" = eval_ssg$accuracy,
+                            "pack" = "spikeSlabGAM")
+plot_data_ssg <- rbind.data.frame(plot_data_ssg,
+                                  data.frame(plot_data_ssg[, -7:-8],
+                                             "accuracy" = plot_data$accuracy[sel_worst | sel_best | sel_fair],
+                                             "pack" = "asp21spike"))
+str(plot_data_ssg, 1)
+
+pdf("../../simulation_study/violin_plots_spikeslabgam.pdf",
+    width = 8,
+    height = 4)
+ggplot(plot_data_ssg,
+       aes(pack, accuracy, fill = pack)) +
+  geom_violin(na.rm = TRUE, 
+              scale = "width",
+              draw_quantiles = 1:3 * 0.25) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") +
+  facet_grid(cols = vars(wb),
+             scales = "free_y")
+dev.off()
+
+eval_coef_ssg <- combis_ssg[rep(1:nrow(combis_ssg), each = 4), c("wb", "row")]
+eval_coef_ssg$coef <- c(0, 2, 3, 6)
+str(eval_coef_ssg)
+head(eval_coef_ssg)
 
