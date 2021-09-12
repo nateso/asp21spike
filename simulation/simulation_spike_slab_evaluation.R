@@ -258,7 +258,7 @@ plot_data[which.max(plot_data$error_scl), ]
 # View(all_combis)
 
 all_combis
-plot(test_data$x9, test_data$y)
+# plot(test_data$x9, test_data$y)
 
 
 ### ===========================================================================
@@ -404,27 +404,34 @@ options(mc.cores = 4)
 mod_ssg <- list()
 
 pb <- txtProgressBar(0, nrow(combis_ssg), style = 3)
-for(i in 1:nrow(combis_ssg)){
-  mod_spsl <- spsl[[combis_ssg[i, ]$row]]
-  if(class(mod_spsl) == "lmls_spike"){
-    data_ssg <- data.frame("y" = mod_spsl$y,
-                           mod_spsl$x[, -1])
-    (system.time({
-      sink("/dev/null")
-      mod_ssg[[i]] <- spikeSlabGAM(y ~ lin(x1) + lin(x2) + lin(x3) + lin(x4) + lin(x5) + 
-                                     lin(x6) + lin(x7) + lin(x8) + lin(x9) + lin(x10) + lin(x11),
-                                   data = data_ssg)
-      sink(NULL)
-    }))
-    sum_ssh <- summary(mod_ssg[[i]])
-    ip <- sum_ssh$trmSummary
-    ip <- ip[grep("lin", rownames(ip)), 1]
-    true_coef <- c(combis_ssg$bets[[i]]) != 0
-    eval_ssg$accuracy[i] <- mean(c(ip[true_coef], 1 - ip[!true_coef]))
+system.time({
+  for(i in 1:nrow(combis_ssg)){
+    mod_spsl <- spsl[[combis_ssg[i, ]$row]]
+    if(class(mod_spsl) == "lmls_spike"){
+      data_ssg <- data.frame("y" = mod_spsl$y,
+                             mod_spsl$x[, -1])
+      (system.time({
+        sink("/dev/null")
+        mod_ssg[[i]] <- spikeSlabGAM(y ~ lin(x1) + lin(x2) + lin(x3) + lin(x4) + lin(x5) + 
+                                       lin(x6) + lin(x7) + lin(x8) + lin(x9) + lin(x10) + lin(x11),
+                                     data = data_ssg)
+        sink(NULL)
+      }))
+      sum_ssh <- summary(mod_ssg[[i]])
+      ip <- sum_ssh$trmSummary
+      ip <- ip[grep("lin", rownames(ip)), 1]
+      true_coef <- c(combis_ssg$bets[[i]]) != 0
+      eval_ssg$accuracy[i] <- mean(c(ip[true_coef], 1 - ip[!true_coef]))
+    }
+    setTxtProgressBar(pb, i)
   }
-  setTxtProgressBar(pb, i)
-}
+})
 close(pb)
+#     user   system  elapsed 
+# 2115.398  403.846 1185.434 
+# ~ 19min
+
+save.image("../../simulation_study/image_ssg.RData")
 
 boxplot(eval_ssg$accuracy ~ combis_ssg$wb)
 
@@ -454,6 +461,68 @@ dev.off()
 
 eval_coef_ssg <- combis_ssg[rep(1:nrow(combis_ssg), each = 4), c("wb", "row")]
 eval_coef_ssg$coef <- c(0, 2, 3, 6)
+n <- nrow(eval_coef_ssg)
+eval_coef_ssg <- rbind.data.frame(eval_coef_ssg, 
+                                  eval_coef_ssg)
+eval_coef_ssg$row_bets <- eval_coef_ssg$row
+eval_coef_ssg$row[1:n] <- rep(1:nrow(combis_ssg), each = 4)
+eval_coef_ssg$pack <- factor(rep(c("spikeSlabGAM", "asp21spike"), each = n), levels = c("spikeSlabGAM", "asp21spike"))
+eval_coef_ssg$value <- NA
 str(eval_coef_ssg)
-head(eval_coef_ssg)
+eval_coef_ssg[1:20, ]
+
+range(eval_coef_ssg$row[eval_coef_ssg$pack == "spikeSlabGAM"])
+
+pb <- txtProgressBar(0, nrow(eval_coef_ssg), style = 3)
+for(i in 1:nrow(eval_coef_ssg)){
+  bets <- c(all_combis$bets[[eval_coef_ssg$row_bets[i]]])
+  loc_sel <- bets == eval_coef_ssg$coef[i]
+  if(eval_coef_ssg$pack[i] == "spikeSlabGAM"){
+    ssg_sum <- summary(mod_ssg[[eval_coef_ssg$row[i]]])
+    if(all(class(ssg_sum) == "summary.spikeSlabGAM")){
+      accu <- mean(ssg_sum$trmSummary[c(FALSE, loc_sel), 1])
+    } else {
+      accu <- NA
+    }
+  } else {
+    if(class(spsl[[eval_coef_ssg$row[i]]]) == "lmls_spike"){
+      delta <- as.matrix(spsl[[eval_coef_ssg$row[i]]]$spike$delta$location[, loc_sel])
+      accu <- mean(apply(delta, 2, mean))
+    } else {
+      accu <- NA
+    }
+  }
+  if(eval_coef_ssg$coef[i] == 0){
+    accu <- 1 - accu
+  }
+  eval_coef_ssg$value[i] <- accu
+  setTxtProgressBar(pb, i)
+}
+close(pb)
+
+eval_coef_ssg$coef <- as.factor(eval_coef_ssg$coef)
+
+plot_data_ssg_coef <- data.frame(plot_data_ssg[, c("wb", "row")],
+                                 "coef" = "all",
+                                 plot_data_ssg[, c("pack", "accuracy")])
+plot_data_ssg_coef <- rbind.data.frame(plot_data_ssg_coef,
+                                       data.frame(eval_coef_ssg[, c(1, 2, 3, 5)],
+                                                  "accuracy" = eval_coef_ssg$value))
+plot_data_ssg_coef$coef
+
+pdf("../../simulation_study/violin_plots_coef_ssg.pdf",
+    width = 8,
+    height = 9)
+ggplot(plot_data_ssg_coef,
+       aes(pack, accuracy, fill = pack)) + 
+  geom_violin(na.rm = TRUE, 
+              scale = "width",
+              draw_quantiles = 1:3 * 0.25) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") +
+  facet_grid(cols = vars(wb),
+             rows = vars(coef),
+             scales = "free_y")
+dev.off()
 
