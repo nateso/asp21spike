@@ -209,7 +209,13 @@ ggplot(plot_data_long,
   geom_vline(xintercept = 1:3 * 0.25 * length(unique(plot_data_long$all_x)) + 0.5,
              linetype = "longdash") + 
   facet_grid(rows = vars(what),
-             scales = "free_y")
+             scales = "free_y") + 
+  geom_text(aes(all_x, value, label = lab, fill = what),
+            data = data.frame(all_x = c(2, 22, 24),
+                              value = -Inf,
+                              what = "Accuracy",
+                              lab = c("worst", "fair", "best")),
+            vjust = -0.3)
 dev.off()
 
 pdf("../../simulation_study/violin_plots_sep.pdf",
@@ -522,7 +528,101 @@ ggplot(plot_data_ssg_coef,
         axis.title.y = element_blank(),
         legend.position = "none") +
   facet_grid(cols = vars(wb),
-             rows = vars(coef),
-             scales = "free_y")
+             rows = vars(coef))
 dev.off()
 
+apply(t(sapply(spsl[401:600],
+               function(x){
+                 apply(x$spike$tau$location, 2, min)
+               })),
+      2, quantile)
+
+
+theta_new <- function(theta, tau, a_tau, b_tau, v_0){
+  num <- theta * dinvgamma(tau, a_tau, b_tau) 
+  denum <-  num + (1 - theta) * dinvgamma(tau, a_tau, b_tau * v_0)
+  theta_new <- num / denum
+  theta_new
+}
+
+lmls:::update_theta
+lmls:::update_delta
+
+plot(NA, 
+     xlim = c(0.001, 1),
+     ylim = c(0, 1),
+     log = "x",
+     xlab = "v_0",
+     ylab = "theta_new")
+abline(v = 0.1, lty = 2)
+for(tau in 1:10){
+  curve(theta_new(0.5, tau, 5, 25, x), 0.001, 1, 
+        add = TRUE,
+        col = tau,
+        lwd = 2)
+}
+
+plot(NA, 
+     xlim = c(0.001, 1),
+     ylim = c(0, 1),
+     log = "x")
+abline(v = 0.1, lty = 2)
+for(param in seq(0, 1, 0.1)){
+  curve(theta_new(param, 6, 5, 25, x), 0.001, 1, 
+        add = TRUE,
+        col = tau,
+        lwd = 2)
+}
+
+plot(NA,
+     xlim = c(0, 5),
+     ylim = c(0, 1),
+     xlab = "Tau",
+     ylab = "Theta_new")
+for(v in c(0.0001, 0.001, 0.01, 0.1)){
+  curve(theta_new(0.5, x, 5, 25, v), 
+        0, 10, 10000,
+        col = abs(log(v, 10)),
+        add = TRUE)
+}
+for(v in c(0.0001, 0.001, 0.01, 0.1)){
+  curve(theta_new(0.5, x, 1, 1, v), 
+        0, 10, 10000,
+        lty = 2,
+        col = abs(log(v, 10)),
+        add = TRUE)
+}
+
+
+sel <- 11
+sel_mod <- 405
+plot(spsl[[sel_mod]], "location", "rand")
+par(mfrow = c(2, 1))
+plot(spsl[[sel_mod]]$spike$delta$location[, sel], type = "l")
+plot(spsl[[sel_mod]]$spike$tau$location[, sel + 1], type = "l")
+par(mfrow = c(1, 1))
+
+plot(mod_ssg[[1]]$samples$gamma[[1]][, 11])
+
+delta_scheipl <- c(mod_ssg[[1]]$samples$gamma[[1]][, 11])
+
+plot_data_delta <- data.frame("value" = c(spsl[[sel_mod]]$spike$delta$location[, sel],
+                                          spsl[[sel_mod]]$spike$tau$location[, sel + 1]),
+                              "what" = rep(c("Delta", "Tau"), each = 1000),
+                              "iterations" = rep(1:1000, 2))
+
+pdf("../../simulation_study/delta_problem.pdf",
+    width = 8,
+    height = 4)
+ggplot(plot_data_delta,
+       aes(iterations, value)) + 
+  geom_line() + 
+  facet_grid(rows = vars(what),
+             scales = "free_y") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+ggplot(mapping = aes(1:length(delta_scheipl), delta_scheipl)) +
+  geom_line() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+dev.off()
