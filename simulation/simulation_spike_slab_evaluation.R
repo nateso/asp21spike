@@ -439,6 +439,10 @@ close(pb)
 
 save.image("../../simulation_study/image_ssg.RData")
 
+### ===========================================================================
+
+load("../../simulation_study/image_ssg.RData")
+
 boxplot(eval_ssg$accuracy ~ combis_ssg$wb)
 
 plot_data_ssg <- data.frame(combis_ssg, 
@@ -574,17 +578,62 @@ for(param in seq(0, 1, 0.1)){
         lwd = 2)
 }
 
+ssb_fun <- function(x, a_tau, b_tau, v_0){
+  dinvgamma(x, a_tau, v_0 * b_tau) + dinvgamma(x, a_tau, b_tau)
+}
+xlim <- 5
+
+
+poly_data <- data.frame("x" = c(seq(0, xlim, length.out = 1000), xlim),
+                        "y" = c(ssb_fun(seq(0, xlim, length.out = 1000), 5, 25, 0.01), 0))
+
+pdf("../../simulation_study/problem_theta_new.pdf",
+    width = 8,
+    height = 4)
+par(mar = c(4, 4, 0.5, 0.5))
 plot(NA,
-     xlim = c(0, 5),
+     xlim = c(0, xlim),
      ylim = c(0, 1),
-     xlab = "Tau",
-     ylab = "Theta_new")
+     xlab = expression(tau^2),
+     ylab = expression(theta["new"]))
 for(v in c(0.0001, 0.001, 0.01, 0.1)){
   curve(theta_new(0.5, x, 5, 25, v), 
         0, 10, 10000,
         col = abs(log(v, 10)),
-        add = TRUE)
+        add = TRUE,
+        lwd = 2)
 }
+legend("bottomright",
+       legend = c(expression(nu[0]~"="~0.1),
+                  expression(nu[0]~"="~0.01),
+                  expression(nu[0]~"="~0.001),
+                  expression(nu[0]~"="~0.0001)),
+       col = 1:4,
+       lwd = 2,
+       bty = "n")
+box()
+### ----------------------------------------------------------------------------
+plot(NA, 
+     xlim = c(0, xlim),
+     ylim = c(0, 1),
+     xlab = expression(tau^2),
+     ylab = expression(theta["new"]~" | density"))
+polygon(x = poly_data$x, y = poly_data$y,
+        lty = 0,
+        col = "grey")
+curve(ssb_fun(x, 5, 25, 0.01), 
+      0, xlim, 1000, 
+      col = "grey",
+      lwd = 2,
+      add = TRUE)
+curve(theta_new(0.5, x, 5, 25, 0.01), 
+      0, 10, 10000,
+      add = TRUE,
+      lwd = 2)
+box()
+dev.off()
+
+
 for(v in c(0.0001, 0.001, 0.01, 0.1)){
   curve(theta_new(0.5, x, 1, 1, v), 
         0, 10, 10000,
@@ -592,7 +641,6 @@ for(v in c(0.0001, 0.001, 0.01, 0.1)){
         col = abs(log(v, 10)),
         add = TRUE)
 }
-
 
 sel <- 11
 sel_mod <- 405

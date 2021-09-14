@@ -1,4 +1,4 @@
 library(testthat)
-library(lmls)
+library(asp21spike)
 
 test_check("lmls")

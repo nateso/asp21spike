@@ -100,7 +100,7 @@ The *lmls* package comes with the *abdom* dataset (which it borrows from the *ga
 (ref:abdom-plot) The *abdom* dataset containing the gestational age and abdominal circumference of 610 fetuses.
 
 ```{r abdom-plot, fig.cap = "(ref:abdom-plot)", fig.pos = "H"}
-library(lmls)
+library(asp21spike)
 
 ggplot(abdom, aes(x, y)) +
   geom_point(color = "darkgray", size = 1) +

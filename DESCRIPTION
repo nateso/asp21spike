@@ -1,4 +1,4 @@
-Package: lmls
+Package: asp21spike
 Title: Gaussian Location-Scale Regression
 Version: 0.0.0.9000
 Authors@R: c(person("Hannes", "Riebl", email = "hriebl@uni-goettingen.de",
@@ -6,17 +6,18 @@ Authors@R: c(person("Hannes", "Riebl", email = "hriebl@uni-goettingen.de",
              person("Johannes", "Matzenmiller", 
                     email = "j.matzenmiller@stud.uni-goettingen.de",
                     role = "aut"),
-             person("Jan", "Schick",
-                    email = "jan.schick@stud.uni-goettingen.de",
-                    role = "aut"),
              person("Nathanael", "Schmidt-Ott", 
                     email = "n.schmidtott@stud.uni-goettingen.de",
+                    role = "aut"),
+             person("Jan", "Schick",
+                    email = "jan.schick@stud.uni-goettingen.de",
                     role = "aut"))
 Description: The Gaussian location-scale regression model is a multi-predictor
     model with explanatory variables for the mean (= location) and the standard
     deviation (= scale) of a response variable. This package implements maximum
     likelihood and Markov chain Monte Carlo (MCMC) inference, a parametric
-    bootstrap algorithm, and diagnostic plots for the model class.
+    bootstrap algorithm, spike and slab priors and diagnostic plots for the 
+    model class.
 Depends: R (>= 3.5.0)
 Imports: generics (>= 0.1.0),
     invgamma
@@ -29,7 +30,8 @@ Suggests:
     patchwork,
     rmarkdown,
     MASS,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    gamlss.data
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
