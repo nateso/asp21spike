@@ -49,13 +49,30 @@ spike_slab(
 \item{seed}{If not NULL (default), the given value will be used for \link{set.seed}.}
 }
 \description{
-\code{spike_slab} provides acces to spike and slab priors.
+This function performs Spike and Slab variable selection on a \link{lmls} object.
 }
 \details{
-The choice of our hyperparameters was made based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
+This function utilizes a MMALA sampler as well as several Gibbs samplers to perform Spike and Slab variable selection. The Spike and Slab priors have been put on the variances of the coefficients to account for the modelling of the variances included in \link{lmls}. The default values of the hyperparameters are based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
+}
+\examples{
+\dontrun{
+data(abdom, package = "gamlss.data")
+mod <- lmls(location = y ~ x, scale = ~ x, data = abdom, light = FALSE)
+spsl <- spike_slab(mod)
+
+print(spsl)
+
+# Summary
+summary(spsl)
+
+# Plot methods
+plot(spsl, "location", "post")
+plot(spsl, "location", "incl")
+plot(spsl, "location", "rand")
+}
+
 }
 \references{
-Scheipl, F. (2011): "spikeSlabGAM: Bayesian variable selection, model choice and regularization for generalized additive mixed models in R"
-
-Fahrmeir, L. et al. (2013): "Regression: Models, Methods and Applications"
+\itemize{\item Scheipl, F. (2011): spikeSlabGAM: Bayesian variable selection, model choice and regularizationfor generalized additive mixed models in R. Journal of Statistical Software, 43 (14)
+\item Fahrmeir, L., Kneib, T., Lang, S. and Marx, B. (2013): Regression: Models, Methods and Applications. Springer}
 }
