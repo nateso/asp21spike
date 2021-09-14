@@ -24,41 +24,37 @@ names(test_data) <- c("y",paste0("x",1:5))
 m <- lmls(y ~ x1 + x2 + x3 + x4 + x5,
           scale = ~ x1 + x2 + x3 + x4 + x5,
           data = test_data,
-          light = FALSE,maxit = 1000)
+          light = FALSE,
+          maxit = 1000)
 
 # test spike_slab -------------------------------------------
 
 spsl <- spike_slab(m,
-                   v_0 = 0.1,
-                   a_theta_loc = 1,
-                   b_theta_loc = 1,
-                   a_theta_scl = 1,
-                   b_theta_scl = 1,
-                   a_tau_loc = 5,
-                   b_tau_loc = 25,
-                   a_tau_scl = 5,
-                   b_tau_scl = 25,
-                   burnin = 100,
-                   coef_init = 0,
-                   #always_in_loc = 'x4',
-                   nsim = 1000,
                    seed = 123, 
                    prog_bar = FALSE)
 
-summary(spsl)
-plot(spsl$spike$delta$location[, 4], type = "l")
-plot(spsl, "location", "inc")
-plot(spsl, "location", "post")
-plot(spsl, "location", "rand")
+test_that("summary works", {
+  expect_output({
+    summary(spsl)
+  }, "Spike and slab prior")
+})
 
-plot(test_data$x1, test_data$y)
-
+test_that("plot works", {
+  expect_silent({
+    plot(spsl, "location", "inc")
+    plot(spsl, "location", "post")
+    plot(spsl, "location", "rand")
+    plot(spsl, "scale",    "inc")
+    plot(spsl, "scale",    "post")
+    plot(spsl, "scale",    "rand")
+  })
+})
 
 # check helper functions for update
 delta <- rep(c(0,1),2)
 bets <- c(6,0.1,-6,-0.1)
 a_tau <- 5 
-b_tau <- 50
+b_tau <- 25
 a_theta <- 1
 b_theta <- 1
 v_0 <- 0.005
@@ -86,6 +82,9 @@ test_that("update_theta() yields one value between 0 and 1",{
   expect_true(length(theta_update) == 1)
 })
 
-tau_update <- update_tau(delta,bets,a_theta,b_theta,v_0)
-
+test_that("update_tau() works", {
+  expect_silent({
+    tau_update <- update_tau(delta,bets,a_theta,b_theta,v_0)
+  })
+})
 
