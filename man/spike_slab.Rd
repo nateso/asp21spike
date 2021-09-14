@@ -28,31 +28,42 @@ spike_slab(
 \arguments{
 \item{m}{A location-scale regression model from the \code{\link[=lmls]{lmls()}} function.}
 
-\item{a_theta_loc, b_theta_loc, a_tau_loc, b_tau_loc}{Hyperparameters for the location. See 'Details'.}
+\item{a_theta_loc, b_theta_loc, a_tau_loc, b_tau_loc}{Hyperparameters for the
+location. See 'Details'.}
 
-\item{a_theta_scl, b_theta_scl, a_tau_scl, b_tau_scl}{Hyperparameters for the scale. See 'Details'.}
+\item{a_theta_scl, b_theta_scl, a_tau_scl, b_tau_scl}{Hyperparameters for the
+scale. See 'Details'.}
 
 \item{v_0}{Factor for the spike component.}
 
 \item{nsim}{The number of MCMC samples to draw.}
 
-\item{burnin}{Number of samples used as burn in phase. Value will be set to zero if negative.}
+\item{burnin}{Number of samples used as burn in phase. Value will be set to
+zero if negative.}
 
 \item{stepsize}{The step size of the MMALA update.}
 
 \item{prog_bar}{Logical value indicating whether to show a progress bar.}
 
-\item{always_in_loc, always_in_scl}{String of variables which are not subject to selection.}
+\item{always_in_loc, always_in_scl}{String of variables which are not subject
+to selection.}
 
-\item{coef_init}{Single value. If not NULL (default), the coefficients will be initialised with the given value.}
+\item{coef_init}{Single value. If not NULL (default), the coefficients will
+be initialised with the given value.}
 
-\item{seed}{If not NULL (default), the given value will be used for \link{set.seed}.}
+\item{seed}{If not NULL (default), the given value will be used for
+\link{set.seed}.}
 }
 \description{
 This function performs Spike and Slab variable selection on a \link{lmls} object.
 }
 \details{
-This function utilizes a MMALA sampler as well as several Gibbs samplers to perform Spike and Slab variable selection. The Spike and Slab priors have been put on the variances of the coefficients to account for the modelling of the variances included in \link{lmls}. The default values of the hyperparameters are based on \cite{Scheipl (2011)} as well as \cite{Kneib (2013)}.
+This function utilizes a MMALA sampler as well as several Gibbs samplers to
+perform Spike and Slab variable selection. The Spike and Slab priors have
+been put on the variances of the coefficients to account for the modelling of
+the variances included in \link{lmls}. The default values of the
+hyperparameters are based on \cite{Scheipl (2011)} as well as \cite{Kneib
+(2013)}.
 }
 \examples{
 \dontrun{
@@ -73,6 +84,9 @@ plot(spsl, "location", "rand")
 
 }
 \references{
-\itemize{\item Scheipl, F. (2011): spikeSlabGAM: Bayesian variable selection, model choice and regularizationfor generalized additive mixed models in R. Journal of Statistical Software, 43 (14)
-\item Fahrmeir, L., Kneib, T., Lang, S. and Marx, B. (2013): Regression: Models, Methods and Applications. Springer}
+\itemize{\item Scheipl, F. (2011): spikeSlabGAM: Bayesian
+variable selection, model choice and regularizationfor generalized
+additive mixed models in R. Journal of Statistical Software, 43 (14)
+\item Fahrmeir, L., Kneib, T., Lang, S. and Marx, B. (2013): Regression:
+Models, Methods and Applications. Springer}
 }
