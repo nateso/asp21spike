@@ -74,6 +74,7 @@ for(i in 1:length(m)){
   }
 }
 
+## Marking sparsity of beta
 bets_spars <- sapply(all_combis$bets, 
                      function(x){
                        ifelse(all(x == all_combis$bets[[1]]), 
@@ -81,6 +82,7 @@ bets_spars <- sapply(all_combis$bets,
                      })
 bets_spars <- factor(bets_spars, levels = c("high", "low"))
 
+## ... and gamma
 gams_spars <- sapply(all_combis$gams, 
                      function(x){
                        ifelse(sum(x == 0) < 11, 
@@ -91,11 +93,11 @@ gams_spars <- sapply(all_combis$gams,
                      })
 gams_spars <- factor(gams_spars, levels = c("max", "high", "low"))
 
+## First graphical evaluation --------------------------------------------------
 
 boxplot(eval$accuracy ~ unlist(all_combis$snr) + unlist(all_combis$n))
 boxplot(eval$error_loc ~ unlist(all_combis$snr) + unlist(all_combis$n))
 boxplot(eval$error_scl ~ unlist(all_combis$snr) + unlist(all_combis$n))
-
 
 boxplot(eval$accuracy ~ gams_spars + bets_spars)
 boxplot(eval$error_loc ~ gams_spars + bets_spars)
@@ -107,6 +109,7 @@ hist(eval$accuracy)
 hist(eval$error_loc)
 hist(eval$error_scl)
 
+## Combining data for plotting
 plot_data <- data.frame(eval,
                         "snr" = unlist(all_combis$snr),
                         "n" = unlist(all_combis$n),
@@ -114,11 +117,13 @@ plot_data <- data.frame(eval,
                         "gams_spars" = gams_spars)
 str(plot_data)
 
+## pasting all combinations together to create one factor
 all_x_levels <- apply(expand.grid(levels(gams_spars),
                                   levels(bets_spars),
                                   "n"   = sort(unique(plot_data$n)),
                                   "snr" = sort(unique(plot_data$snr)))[, 4:1],
                       1, paste0, collapse = " - ")
+## Converting to factors
 plot_data$all_x     <- factor(apply(plot_data[, -1:-3], 1, paste0, collapse = " - "), levels = all_x_levels)
 plot_data$snr_n     <- factor(apply(plot_data[, c("snr", "n")], 1, paste0, collapse = " - "),
                               levels = c("3 - 300", "3 - 1000", "10 - 300", "10 - 1000"))
@@ -126,69 +131,19 @@ plot_data$bets_gams <- factor(apply(plot_data[, c("bets_spars", "gams_spars")], 
                               levels = paste0(rep(levels(bets_spars), each = length(levels(gams_spars))), " - ",
                                               rep(levels(gams_spars), length(levels(bets_spars)))))
 
+## Long data format for ggplot
 plot_data_long <- data.frame("value" = c(plot_data[, 1], plot_data[, 2], plot_data[, 3]),
                              "what" = rep(c("Accuracy", "Error Location", "Error Scale"), each = nrow(plot_data)),
                              plot_data[rep(1:nrow(plot_data), 3), -1:-3])
 str(plot_data_long)
 
+## color
 col_n <- ifelse(length(unique(plot_data_long$all_x)) > 6, 4, 2)
-col <- rep(letters[seq(1, length(unique(plot_data_long$all_x)) / col_n)], col_n)
+col <- rep(letters[seq(1, length(unique(plot_data_long$all_x)) / col_n)], 
+           col_n)
 plot_data_long$col <- col[as.numeric(plot_data_long$all_x)]
 
-# ggplot(plot_data_long,
-#               aes(all_x, value, fill = col)) +
-#   geom_violin(na.rm = TRUE, 
-#               draw_quantiles = 1:3 * 0.25, 
-#               scale = "width") +
-#   # theme_classic() +
-#   theme(axis.text.x = element_text(angle = cust_angle, 
-#                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
-#                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
-#         axis.title.x = element_blank(),
-#         axis.title.y = element_blank(),
-#         legend.position = "none") +
-#   geom_vline(xintercept = 1:3 * 0.25 * length(unique(x)) + 0.5,
-#              linetype = "longdash") + 
-#   facet_grid(rows = vars(what),
-#              scales = "free_y")
-
-
-# default_plot <- function(data, x, y, x_lab, y_lab, cust_angle = 0, facet_rows = NULL){
-#   # get_rect <- data.frame("xstart" = seq(0.5, length(levels(x)) - 0.5),
-#   #                        "xend" = seq(1.5, length(levels(x)) + 0.5),
-#   #                        "cols" = c("#33333333", "#00000000"),
-#   #                        stringsAsFactors = FALSE)
-#   # str(get_rect)
-#   # str(get_rect)
-#   col_n <- ifelse(length(unique(x)) > 6, 4, 2)
-#   col <- rep(letters[seq(1, length(unique(x)) / col_n)], col_n)
-#   data$col <- col[as.numeric(x)]
-#   p <- ggplot(data, aes(x, y, fill = col)) +
-#     geom_violin(na.rm = TRUE, 
-#                 draw_quantiles = 1:3 * 0.25, 
-#                 scale = "width") +
-#     theme_classic() +
-#     theme(axis.text.x = element_text(angle = cust_angle, 
-#                                      vjust = ifelse(cust_angle == 0, 0.5, 1), 
-#                                      hjust = ifelse(cust_angle == 0, 0.5, 1)),
-#           legend.position = "none") +
-#     xlab(x_lab) +
-#     ylab(y_lab) + 
-#     geom_vline(xintercept = 0.5 * (length(unique(x)) + 1),
-#                linetype = "longdash")
-#   if(length(unique(x)) > 6){
-#     p <- p + geom_vline(xintercept = c(0.25, 0.75) * (length(unique(x))) + 0.5,
-#                         linetype = "longdash")
-#   }
-#   if(y_lab == "Accuracy"){ 
-#     p <- p + ylim(c(min(y), 1))
-#   }
-#   if(!is.null(facet_rows)){
-#     p <- p + facet_grid(rows = vars(facet_rows),
-#                         scales = "free_y")
-#   }
-#   p
-# }
+## All combinations ------------------------------------------------------------
 
 pdf("../../simulation_study/violin_plots_all.pdf",
     width = 8,
@@ -218,6 +173,8 @@ ggplot(plot_data_long,
             vjust = -0.3)
 dev.off()
 
+## Separated by snr / n and sparsity -------------------------------------------
+
 pdf("../../simulation_study/violin_plots_sep.pdf",
     width = 4,
     height = 8)
@@ -238,13 +195,12 @@ ggplot(plot_data_long,
              linetype = "longdash") + 
   facet_grid(rows = vars(what),
              scales = "free_y")
-## Sparsity -------------------------------------------------------------------
+## Sparsity 
 ggplot(plot_data_long,
        aes(bets_gams, value, fill = bets_gams)) +
   geom_violin(na.rm = TRUE, 
               draw_quantiles = 1:3 * 0.25, 
               scale = "width") +
-  # theme_classic() +
   theme(axis.text.x = element_text(angle = cust_angle, 
                                    vjust = ifelse(cust_angle == 0, 0.5, 1), 
                                    hjust = ifelse(cust_angle == 0, 0.5, 1)),
@@ -270,6 +226,7 @@ all_combis
 ### ===========================================================================
 ### Evaluate for coefficients =================================================
 
+## Function for calculating accuracy
 calc_acc_coef <- function(mod, bets, gams, coef_val, coef_which, what){
   sel <- names(mod$spike$coefs$location) %in% names(mod$spike$delta$location)
   if("(Intercept)" %in% names(mod$spike$coefs$location)){
@@ -318,7 +275,10 @@ calc_acc_coef <- function(mod, bets, gams, coef_val, coef_which, what){
   return(out)
 }
 
+## Which entries of spsl are not NA?
 spsl_sel <- (1:length(spsl))[sapply(spsl, function(x){class(x) == "lmls_spike"})]
+
+## Setting up data.frame for evaluation by coefficient
 eval_coef <- data.frame("coef" = rep(c(0, 2, 3, 6), 2 * 2),
                         "param" = rep(c("Location", "Scale"), each = 4 * 2),
                         "value" = NA,
@@ -327,6 +287,7 @@ eval_coef <- data.frame("coef" = rep(c(0, 2, 3, 6), 2 * 2),
 eval_coef <- eval_coef[rep(1:nrow(eval_coef), each = length(spsl_sel)), ]
 eval_coef$spsl_sel <- spsl_sel
 
+## Calculating accuracy for each coef
 pb <- txtProgressBar(0, nrow(eval_coef), style = 3)
 for(i in 1:nrow(eval_coef)){
   check <- any(all_combis[[ifelse(eval_coef$param[i] == "Location",
@@ -343,14 +304,18 @@ for(i in 1:nrow(eval_coef)){
 }
 close(pb)
 
+## Quick plausibility check
 aggregate(eval_coef$value,
           by = as.list(eval_coef[, c(-3, -5)]), 
           FUN = mean, na.rm = TRUE)
 summary(eval_coef)
 
+## Data manipulation
 eval_coef$coef  <- factor(eval_coef$coef, levels = c(0, 2, 3, 6))
 eval_coef$param <- as.factor(eval_coef$param)
 eval_coef$what  <- as.factor(eval_coef$what)
+
+## plotting by coefficients ----------------------------------------------------
 
 pdf("../../simulation_study/violin_plots_coef.pdf",
     width = 8,
@@ -393,10 +358,12 @@ wb[sel_best]  <- "best"
 wb[sel_fair]  <- "fair"
 wb <- factor(wb, levels = c("worst", "best", "fair"))
 
+## Selecting relevant combis
 combis_ssg <- all_combis[sel_worst | sel_best | sel_fair, ]
 combis_ssg$wb <- wb[sel_worst | sel_best | sel_fair]
 combis_ssg$row <- (1:nrow(all_combis))[sel_best | sel_worst | sel_fair]
 
+## setting up data.frame for evaluation of spikeSlabGAM performance
 eval_ssg <- data.frame("row" = combis_ssg$row,
                        "accuracy" = NA)
 
@@ -414,8 +381,10 @@ system.time({
   for(i in 1:nrow(combis_ssg)){
     mod_spsl <- spsl[[combis_ssg[i, ]$row]]
     if(class(mod_spsl) == "lmls_spike"){
+      ## Extracting data from spike slab model
       data_ssg <- data.frame("y" = mod_spsl$y,
                              mod_spsl$x[, -1])
+      ## Fitting
       (system.time({
         sink("/dev/null")
         mod_ssg[[i]] <- spikeSlabGAM(y ~ lin(x1) + lin(x2) + lin(x3) + lin(x4) + lin(x5) + 
@@ -423,9 +392,11 @@ system.time({
                                      data = data_ssg)
         sink(NULL)
       }))
+      ## Retrieving inclusion probs from summary
       sum_ssh <- summary(mod_ssg[[i]])
       ip <- sum_ssh$trmSummary
       ip <- ip[grep("lin", rownames(ip)), 1]
+      ## Accuracy
       true_coef <- c(combis_ssg$bets[[i]]) != 0
       eval_ssg$accuracy[i] <- mean(c(ip[true_coef], 1 - ip[!true_coef]))
     }
@@ -445,6 +416,7 @@ load("../../simulation_study/image_ssg.RData")
 
 boxplot(eval_ssg$accuracy ~ combis_ssg$wb)
 
+## Formatting data for ggplot
 plot_data_ssg <- data.frame(combis_ssg, 
                             "accuracy" = eval_ssg$accuracy,
                             "pack" = "spikeSlabGAM")
@@ -453,6 +425,8 @@ plot_data_ssg <- rbind.data.frame(plot_data_ssg,
                                              "accuracy" = plot_data$accuracy[sel_worst | sel_best | sel_fair],
                                              "pack" = "asp21spike"))
 str(plot_data_ssg, 1)
+
+## Violin plots ----------------------------------------------------------------
 
 pdf("../../simulation_study/violin_plots_spikeslabgam.pdf",
     width = 8,
@@ -469,6 +443,10 @@ ggplot(plot_data_ssg,
              scales = "free_y")
 dev.off()
 
+
+## Evaluation by coefficients ==================================================
+
+## Setting up data.frame
 eval_coef_ssg <- combis_ssg[rep(1:nrow(combis_ssg), each = 4), c("wb", "row")]
 eval_coef_ssg$coef <- c(0, 2, 3, 6)
 n <- nrow(eval_coef_ssg)
@@ -483,6 +461,7 @@ eval_coef_ssg[1:20, ]
 
 range(eval_coef_ssg$row[eval_coef_ssg$pack == "spikeSlabGAM"])
 
+## Calculating accuracy via inclusion probabilities
 pb <- txtProgressBar(0, nrow(eval_coef_ssg), style = 3)
 for(i in 1:nrow(eval_coef_ssg)){
   bets <- c(all_combis$bets[[eval_coef_ssg$row_bets[i]]])
@@ -512,6 +491,7 @@ close(pb)
 
 eval_coef_ssg$coef <- as.factor(eval_coef_ssg$coef)
 
+## Combining data for all coef. and separate coef.
 plot_data_ssg_coef <- data.frame(plot_data_ssg[, c("wb", "row")],
                                  "coef" = "all",
                                  plot_data_ssg[, c("pack", "accuracy")])
@@ -519,6 +499,8 @@ plot_data_ssg_coef <- rbind.data.frame(plot_data_ssg_coef,
                                        data.frame(eval_coef_ssg[, c(1, 2, 3, 5)],
                                                   "accuracy" = eval_coef_ssg$value))
 plot_data_ssg_coef$coef
+
+## spikeSlabGAM coef plot ------------------------------------------------------
 
 pdf("../../simulation_study/violin_plots_coef_ssg.pdf",
     width = 8,
@@ -542,6 +524,9 @@ apply(t(sapply(spsl[401:600],
       2, quantile)
 
 
+## Theta_new problem ===========================================================
+
+## Taken from the Gibbs sampler for delta
 theta_new <- function(theta, tau, a_tau, b_tau, v_0){
   num <- theta * dinvgamma(tau, a_tau, b_tau) 
   denum <-  num + (1 - theta) * dinvgamma(tau, a_tau, b_tau * v_0)
@@ -549,8 +534,8 @@ theta_new <- function(theta, tau, a_tau, b_tau, v_0){
   theta_new
 }
 
-lmls:::update_theta
-lmls:::update_delta
+asp21spike:::update_theta
+asp21spike:::update_delta
 
 plot(NA, 
      xlim = c(0.001, 1),
@@ -578,14 +563,18 @@ for(param in seq(0, 1, 0.1)){
         lwd = 2)
 }
 
-ssb_fun <- function(x, a_tau, b_tau, v_0){
-  dinvgamma(x, a_tau, v_0 * b_tau) + dinvgamma(x, a_tau, b_tau)
+## Density of tau sampler
+library(invgamma)
+ssb_fun <- function(x, a_tau, b_tau, v_0, beta){
+  (dinvgamma(x, a_tau + 0.5, v_0 * b_tau + 0.5 * beta^2) + 
+     dinvgamma(x, a_tau + 0.5, b_tau + 0.5 * beta^2))
 }
 xlim <- 5
 
-
-poly_data <- data.frame("x" = c(seq(0, xlim, length.out = 1000), xlim),
-                        "y" = c(ssb_fun(seq(0, xlim, length.out = 1000), 5, 25, 0.01), 0))
+a_tau <- 5
+b_tau <- 25
+v_0   <- 0.01
+beta  <- 1.5
 
 pdf("../../simulation_study/problem_theta_new.pdf",
     width = 8,
@@ -597,8 +586,8 @@ plot(NA,
      xlab = expression(tau^2),
      ylab = expression(theta["new"]))
 for(v in c(0.0001, 0.001, 0.01, 0.1)){
-  curve(theta_new(0.5, x, 5, 25, v), 
-        0, 10, 10000,
+  curve(theta_new(0.5, x, a_tau, b_tau, v), 
+        0, xlim, 10000,
         col = abs(log(v, 10)),
         add = TRUE,
         lwd = 2)
@@ -613,21 +602,25 @@ legend("bottomright",
        bty = "n")
 box()
 ### ----------------------------------------------------------------------------
+x <- seq(0, xlim, length.out = 1000)
+poly_data <- data.frame("x" = c(x, xlim),
+                        "y" = c(ssb_fun(x, a_tau, b_tau, v_0, beta), 0),
+                        "y2" = c(ssb_fun(x, a_tau, b_tau, v_0, beta * 1.5), 0))
 plot(NA, 
      xlim = c(0, xlim),
      ylim = c(0, 1),
      xlab = expression(tau^2),
-     ylab = expression(theta["new"]~" | density"))
+     ylab = expression(theta["new"]~" and density"))
+# polygon(x = poly_data$x, y = poly_data$y2,
+#         lty = 1,
+#         border = "blue",
+#         col = "grey90")
 polygon(x = poly_data$x, y = poly_data$y,
-        lty = 0,
+        lty = 1,
+        border = "grey",
         col = "grey")
-curve(ssb_fun(x, 5, 25, 0.01), 
-      0, xlim, 1000, 
-      col = "grey",
-      lwd = 2,
-      add = TRUE)
-curve(theta_new(0.5, x, 5, 25, 0.01), 
-      0, 10, 10000,
+curve(theta_new(0.5, x, a_tau, b_tau, v_0), 
+      0, xlim, 10000,
       add = TRUE,
       lwd = 2)
 box()
@@ -642,9 +635,15 @@ for(v in c(0.0001, 0.001, 0.01, 0.1)){
         add = TRUE)
 }
 
+
+## Delta sampling problem ======================================================
+
+## Selecting an illustrative example
 sel <- 11
 sel_mod <- 405
+
 plot(spsl[[sel_mod]], "location", "rand")
+
 par(mfrow = c(2, 1))
 plot(spsl[[sel_mod]]$spike$delta$location[, sel], type = "l")
 plot(spsl[[sel_mod]]$spike$tau$location[, sel + 1], type = "l")
